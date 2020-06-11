@@ -1,12 +1,10 @@
-
+import sys
 
 def canKingMoveHere(Colour,KingSpace,OtherMoves):
     print("")
     for i in KingSpace:
         for x in i:
             print("")
-
-
 
 def validKing(Colour, KingSpace, Board):
     currentKingX = KingSpace[0]
@@ -457,13 +455,73 @@ def initialBoardStat():
 
     return chessBoard
 
-def checkmate():
-    if kingCheck == True:
-        if noMoves == "True":
-            return "Check Mate Game Over"
+def checkmate(validKingMoves,KingSpace,Board):
+    for kMoves in validKingMoves:
+        kX = kMoves[0]
+        kY = kMoves[1]
+        validMoves = legalMoves()
+        for valMove in validMoves:
+            vX = valMove[0]
+            vY = valMove[1]
+            
+            #Not CheckMate
+            if vX != kX and vY != kY:
+                break
 
-        if noMoves == "False":
-            print("Do Best Move")
+        return True
+
+
+
+def check(Colour,recentMove,recentPiece,KingPosition,Board):
+
+    if recentPiece == "Pawn":
+        possiblePositions = validPawn(Colour,recentMove,Board)
+
+    elif recentPiece == "Rook":
+        possiblePositions = validRook(Colour,recentMove,Board)
+
+    elif recentPiece == "Queen":
+        possiblePositions = validQueen(Colour,recentMove,Board)
+
+    elif recentPiece == "Bishop":
+        possiblePositions = validBishop(Colour,recentMove,Board)
+
+    possibleKingMoves = validKing(Colour,recentMove,Board)
+    kingX = KingPosition[0]
+    kingY = KingPosition[1]
+    for positions in possiblePositions:
+        possibleX = positions[0]
+        possibleY = possibles[1]
+        if possibleX == kingX and possibleY == kingY:
+            final = checkmate()
+            if final == True:
+                print("Game is Finished")
+                sys.exit()
+            else:
+                newBoard = movePiece()
+
+    return newBoard
+
+
+
+
+def legalMoves(Colour,KingSpace,QueenSpace,BishopSpace,RookSpace,PawnSpace,Board):
+    legalMoves = []
+    vKing  = validKing(Colour,KingSpace,Board)
+    vQueen = validQueen(Colour,QueenSpace,Board)
+    vBishop = validBishop(Colour,BishopSpace,Board)
+    vRook = validRook(Colour,RookSpace,Board)
+    vPawn = validPawn(Colour,PawnSpace,Board)
+    legalMoves.append("King")
+    legalMoves.append(vKing)
+    legalMoves.append("Queen")
+    legalMoves.append(vQueen)
+    legalMoves.append("Bishop")
+    legalMoves.append(vBishop)
+    legalMoves.append("Rook")
+    legalMoves.append(vRook)
+    legalMoves.append("Pawn")
+    legalMoves.append(vPawn)
 
 
 
