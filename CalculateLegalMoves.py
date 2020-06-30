@@ -1,10 +1,5 @@
 import sys
-
-def canKingMoveHere(Colour,KingSpace,OtherMoves):
-    print("")
-    for i in KingSpace:
-        for x in i:
-            print("")
+from riskRewardPath import *
 
 def validKing(Colour, KingSpace, Board):
     currentKingX = KingSpace[0]
@@ -47,8 +42,8 @@ def validKing(Colour, KingSpace, Board):
     currentSpace = Board[tempX][tempY]
     if currentSpace == ".":
         possibleMove = []
-        possible.append(tempX)
-        possible.append(tempY)
+        possibleMove.append(tempX)
+        possibleMove.append(tempY)
         kingMoves.append(possibleMove)
 
 
@@ -92,7 +87,7 @@ def validKing(Colour, KingSpace, Board):
         possibleMove = []
         possibleMove.append(tempX)
         possibleMove.append(tempY)
-        kingMove.append(possibleMove)
+        possibleMove.append(possibleMove)
     #Code King
     return currentSpace
 
@@ -134,7 +129,7 @@ def validQueen(Colour,QueenSpace,Board):
         whatIsOnSquare = Board[SpaceX][SpaceY]
         if whatIsOnSquare == ".":
             possibleMoves.append(SpaceX)
-            possibleMoves.append(spaceY)
+            possibleMoves.append(SpaceY)
             validQueenMoves.append(possibleMoves)
         else:
             #Add test to capture or invalid
@@ -203,7 +198,7 @@ def validQueen(Colour,QueenSpace,Board):
             whatIsOnSquare = Board[possibleBX][possibleBY]
             if whatIsOnSquare == ".":
                 validMove.append(possibleBX)
-                validMove.append(possibleBy)
+                validMove.append(possibleBY)
                 validQueenMoves.append(validMove)
             else:
                     #If Black Possible Movement
@@ -235,7 +230,8 @@ def validBishop(Colour, BishopSpace, Board):
             break
 
         print("")
-    while BishopX>0 and BishopY<8:
+
+    while currentBishopX>0 and currentBishopY<8:
         validMove = []
         possibleBX = currentBishopX-1
         possibleBY = currentBishopY+1
@@ -249,7 +245,7 @@ def validBishop(Colour, BishopSpace, Board):
             #If White Possible No Movement
             break
 
-    while BishopX<8 and BishopY<8:
+    while currentBishopX<8 and currentBishopY<8:
         validMove = []
         possibleBX = currentBishopX+1
         possibleBY = currentBishopY+1
@@ -263,23 +259,92 @@ def validBishop(Colour, BishopSpace, Board):
             #If White Possible No Movement
             break
 
-    while BishopX>0 and BishopY>0:
+    while currentBishopX>0 and currentBishopY>0:
         validMove = []
         possibleBX = currentBishopX-1
         possibleBY = currentBishopY-1
         whatIsOnSquare = Board[possibleBX][possibleBY]
         if whatIsOnSquare == ".":
             validMove.append(possibleBX)
-            validMove.append(possibleBy)
+            validMove.append(possibleBY)
             validBishopMoves.append(validMove)
         else:
             break
 
     return validBishopMoves
 
-def validKnight(KnightSpace,Board):
-    #Code Knight Rules
-    return False
+def validKnight(Colour,KnightSpace,Board):
+
+    cKX = KnightSpace[0]
+    cKY = KnightSpace[1]
+    possibleKnightMoves = []
+
+    #Move More Up and Down
+    tempX = cKX+1
+    tempY = cKY+2
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(possibleKnightMoves)
+
+    tempX = cKX-1
+    tempY = cKY+2
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(pMove)
+
+    tempX = cKX + 1
+    tempY = cKY - 2
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(pMove)
+
+    tempX = cKX  - 1
+    tempY = cKY - 2
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(pMove)
+
+    #Move more Horizontally
+    tempX = cKX+2
+    tempY = cKY+1
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(pMove)
+
+    tempX = cKX + 2
+    tempY = cKX - 1
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(pMove)
+
+    tempX = cKX - 2
+    tempY = cKY + 1
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(pMove)
+
+    tempX = cKX - 2
+    tempY = cKY - 1
+    if tempX<8 and tempX>0 and tempY>0 and tempY<8:
+        pMove = []
+        pMove.append(tempX)
+        pMove.append(tempY)
+        possibleKnightMoves.append(pMove)
+    return possibleKnightMoves
 
 def validRook(Colour, RookSpace,Board):
  #Can Move any space Vertically
@@ -292,7 +357,7 @@ def validRook(Colour, RookSpace,Board):
     while currentRookX >7:
         currentRookX+=1
         checkMove = []
-        if BoardSpace[currentRookX][currentRookY]!=".":
+        if Board[currentRookX][currentRookY]!=".":
             checkMove.append(currentRookX)
             checkMove.append(currentRookY)
             ValidRookMoves.append(checkMove)
@@ -302,7 +367,7 @@ def validRook(Colour, RookSpace,Board):
     while currentRookX2 < 0:
         currentRookX2-=1
         checkMove = []
-        if BoardSpace[currentRookX2][currentRookY]!=".":
+        if Board[currentRookX2][currentRookY]!=".":
             checkMove.append(currentRookX2)
             checkMove.append(currentRookY)
             ValidRookMoves.append(checkMove)
@@ -312,7 +377,7 @@ def validRook(Colour, RookSpace,Board):
     while currentRookY > 7:
         currentRookY+=1
         checkMove = []
-        if BoardSpace[currentRookX][currentRookY]!=".":
+        if Board[currentRookX][currentRookY]!=".":
             checkMove.append(currentRookX)
             checkMove.append(currentRookY2)
             ValidRookMoves.append(checkMove)
@@ -322,7 +387,7 @@ def validRook(Colour, RookSpace,Board):
 
     while currentRookY2 < 0:
         currentRookY2-=1
-        if BoardSpace[currentRookX][currentRookY2]!="."
+        if Board[currentRookX][currentRookY2]!=".":
             checkMove.append(currentRookX)
             checkMove.append(currentRookY2)
             ValidRookMoves.append(checkMove)
@@ -337,7 +402,6 @@ def validPawn(Colour,PawnSpace,Board):
     pawnCaptureXM1 = PawnSpace[0] - 1
     pawnCaptureXP1 = PawnSpace[0] + 1
     pawnCaptureY1 = PawnSpace[1] + 1
-
 
     #Normal Capture
     if Board[pawnCaptureXP1][pawnCaptureY1] != "." and pawnCaptureXP1>7:
@@ -372,13 +436,13 @@ def validPawn(Colour,PawnSpace,Board):
         ValidPawnMoves.append(subMoves)
 
     #En Passant
-    if PawnSpace[1] = 5 and Colour == "White":
+    if PawnSpace[1] == 5 and Colour == "White":
         xMinus1 = PawnSpace[0] + 1
         xPlus1 = PawnSpace[0] + 1
         ySpace = PawnSpace[1] + 1
 
-        IsPawnP = BoardSpace[xMinus1][ySpace]
-        IsPawnM = BoardSpace[xPlus1][ySpace]
+        IsPawnP = Board[xMinus1][ySpace]
+        IsPawnM = Board[xPlus1][ySpace]
 
         if IsPawnP.contains("BPawn"):
             subMoves = []
@@ -392,17 +456,7 @@ def validPawn(Colour,PawnSpace,Board):
             subMoves.append(ySpace)
             ValidPawnMoves.append(subMoves)
 
-
-
-
-
-
-
-
-
-
-
-    return False
+    return ValidPawnMoves
 
 def initialBoardStat():
     print("")
@@ -463,7 +517,7 @@ def checkmate(validKingMoves,KingSpace,Board):
         for valMove in validMoves:
             vX = valMove[0]
             vY = valMove[1]
-            
+
             #Not CheckMate
             if vX != kX and vY != kY:
                 break
@@ -471,39 +525,125 @@ def checkmate(validKingMoves,KingSpace,Board):
         return True
 
 
+def check(Colour,WKing,BKing,Board):
+    check = False
 
-def check(Colour,recentMove,recentPiece,KingPosition,Board):
+    WKingX = WKing[0]
+    WKingY = WKing[1]
 
-    if recentPiece == "Pawn":
-        possiblePositions = validPawn(Colour,recentMove,Board)
+    BKingX = BKing[0]
+    BKingY = BKing[1]
 
-    elif recentPiece == "Rook":
-        possiblePositions = validRook(Colour,recentMove,Board)
+    xW = WKingX
+    xB = BKingX
 
-    elif recentPiece == "Queen":
-        possiblePositions = validQueen(Colour,recentMove,Board)
+    #Rook Comparison
+    while xW!=8 and check==False:
+       xW += 1
+       space = Board[xW][WKingY]
+       if space == "BRook" or space == "BQueen":
+            check = True
+            break
 
-    elif recentPiece == "Bishop":
-        possiblePositions = validBishop(Colour,recentMove,Board)
+    while xB!=8 and check==False:
+        xB += 1
+        space = Board[xB][BKingY]
+        if space == "WRook" or space == "WQueen":
+            check = True
+            break
 
-    possibleKingMoves = validKing(Colour,recentMove,Board)
-    kingX = KingPosition[0]
-    kingY = KingPosition[1]
-    for positions in possiblePositions:
-        possibleX = positions[0]
-        possibleY = possibles[1]
-        if possibleX == kingX and possibleY == kingY:
-            final = checkmate()
-            if final == True:
-                print("Game is Finished")
-                sys.exit()
-            else:
-                newBoard = movePiece()
+    xW = WKingX
+    xB = BKingX
+    while xW!=0 and check==False:
+        xW-=1
+        space = Board[xW][WKingY]
+        if space == "BRook" or space == "BQueen":
+            check = True
+            break
 
-    return newBoard
+    while xB!=0 and check==False:
+        xB -= 1
+        space = Board[xW][WKingY]
+        if space == "BRook" or space == "BQueen":
+            check = True
+            break
+
+    yW = WKingY
+    yB = BKingY
+    while yW!=8 and check==False:
+            yW += 1
+            space = Board[WKingX][yW]
+            if space == "WRook" or space == "WQueen":
+                check = True
+                break
+
+    while yB!=8 and check==False:
+        yB += 1
+        space = Board[BKingY][yB]
+        if space == "WRook" or space == "WQueen":
+            check = True
+            break
+
+
+    yW = WKingY
+    yB = BKingY
+    while yB!=0 and check==False:
+        yB -= 1
+        space = Board[WKingY][yB]
+        if space == "WRook" and space == "WQueen":
+            check = True
+            break
+
+    while yW!=0 and check==False:
+        yB -= 1
+        space = Board[BKingX][yB]
+        if space == "BRook" and space == "BQueen":
+            check = True
+            break
+
+
+    #Checks if Whites Move is invalid and puts white into Check
+    if Colour == "W" and whiteCheck == True:
+        return False
+
+    elif Colour == "B" and blackCheck == True:
+        return False
+
+    elif Colour == "W" and blackCheck == True:
+        return True
+
+    elif Colour == "B" and whiteCheck == True:
+        return False
 
 
 
+def movePiece(Board,bestMove):
+    pX = bestMove[0]
+    pY = bestMove[1]
+    cX = bestMove[0]
+    cY = bestMove[1]
+
+    Piece = Board[pX][pY]
+    Colour = Piece[0]
+    if Colour == "W":
+        Board[cX][cY] = "."
+        Board[pX][pY] = Piece
+    else:
+        Board[cX][cY] = "."
+        Board[pX][pY] = Piece
+
+def promote(Colour,pawnPosition,Board):
+    if Colour == "White":
+        xP = pawnPosition[0]
+        yP = pawnPosition[1]
+        Board[xP][yP] = "WQueen"
+
+    else:
+        xP = pawnPosition[0]
+        yP = pawnPosition[1]
+        Board[xP][yP] = "BQueen"
+
+    return Board
 
 def legalMoves(Colour,KingSpace,QueenSpace,BishopSpace,RookSpace,PawnSpace,Board):
     legalMoves = []
@@ -523,75 +663,122 @@ def legalMoves(Colour,KingSpace,QueenSpace,BishopSpace,RookSpace,PawnSpace,Board
     legalMoves.append("Pawn")
     legalMoves.append(vPawn)
 
+def whileGameIsOn(Colour,Board):
+    validMoves = []
+    validPawns = []
+    validRooks = []
+    validPawns = []
+    validKnights = []
+    validBishops = []
+    validQueen = []
+    validKing = []
+
+    WKing = []
+    BKing = []
+
+    for x in range(8):
+        for y in range(8):
+            currentSpace = Board[x][y]
+            currentSpace = Colour + currentSpace[1:]
+
+            if currentSpace == "WPawn":
+                currentPawn = []
+                currentPawn.append(x)
+                currentPawn.append(y)
+                pawns = validPawn(Colour, currentPawn, Board)
+                validPawns.append(pawns)
+
+            elif currentSpace == "BPawn":
+                currentPawn = []
+                currentPawn.append(x)
+                currentPawn.append(y)
+                pawns = validPawn(Colour, currentPawn, Board)
+                validPawns.append(pawns)
+
+            elif currentSpace == "WRook":
+                currentRook = []
+                currentRook.append(x)
+                currentRook.append(y)
+                rooks = validRook(Colour, currentRook, Board)
+                validRooks.append(rooks)
+
+            elif currentSpace == "BRook":
+                currentRook = []
+                currentRook.append(x)
+                currentRook.append(y)
+                rooks = validRook(Colour, currentRook, Board)
+                validRooks.append(rooks)
+
+            if currentSpace == "WKnight":
+                currentKnight.append(x)
+                currentKnight.append(y)
+                knight = validKnight(Colour, currentKnight, Board)
+                validKnights.append(knight)
+
+            elif currentSpace == "BKnight":
+                currentKnight = []
+                currentKnight.append(x)
+                currentKnight.append(y)
+                knight = validKnight(Colour, currentKnight, Board)
+                validMoves.append(knight)
+
+            elif currentSpace == "WBishop":
+                bishop = []
+                currentBishop.append(x)
+                currentBishop.append(y)
+                bishop = validBishop(Colour, currentBishop, Board)
+                validBishops.append(bishop)
+
+            elif currentSpace == "BBishop":
+                currentBishop = []
+                currentBishop.append(x)
+                currentBishop.append(y)
+                bishop = validBishop(Colour, currentBishop, Board)
+                validBishops.append(bishop)
+
+            elif currentSpace == "WQueen":
+                currentQueen = []
+                currentQueen.append(x)
+                currentQueen.append(y)
+                queen = validQueen(Colour, currentQueen, Board)
+                validQueen.append(queen)
+
+            elif currentSpace == "BQueen":
+                currentQueen = []
+                currentQueen.append(x)
+                currentQueen.append(y)
+                queen = validQueen(Colour, currentQueen, Board)
+                validMoves.append(queen)
+
+            elif currentSpace == "WKing":
+               WKing.append(x)
+               WKing.append(y)
+               WKing = validKing(Colour,WKing,Board)
+               validKing.append(WKing)
+
+            elif currentSpace == "BKing":
+               BKing.append(x)
+               BKing.append(x)
+               BKing = validKing(Colour,BKing,Board)
+               validKing.append(BKing)
+
+
+    bestMove = calculateBestMove(validPawns,validRooks,validKnights,validBishops,validQueen,validKing)
+    Board = movePiece(Board,bestMove)
+
+    if "W" == Colour:
+        Colour = "B"
+
+    elif "B" == Colour:
+        Colour = "W"
+
+    whileGameIsOn(Colour,Board)
+
 
 
 if __name__ == '__main__':
     Board = initialBoardStat()
     Colour = "White"
-    validMoves = []
-    whiteKing = []
-    blackKing = []
-
-    while(gameIsOn):
-        for x in range(8):
-            for y in range(8):
-                currentSpace = Board[x][y]
-                if currentSpace == "Pawn":
-                    currentPawn = []
-                    currentPawn.append(x)
-                    currentPawn.append(y)
-                    pawns = validPawn(Colour,currentPawn,Board)
-                    validMoves.append(pawns)
-
-                elif currentSpace == "Rook":
-                    currentRook = []
-                    currentRook.append(x)
-                    currentRook.append(y)
-                    rooks = validRook(Colour, currentRook,Board)
-                    validMoves.append(rooks)
-
-                elif currentSpace == "Bishop":
-                    currentBishop = []
-                    currentBishop.append(x)
-                    currentBishop.append(y)
-                    bishop = validBishop(Colour,currentBishop,Board)
-                    validMoves.append(bishop)
-
-                elif currentSpace == "Queen":
-                    currentQueen = []
-                    currentQueen.append(x)
-                    currentQueen.append(y)
-                    queen = validQueen(Colour,currentQueen,Board)
-                    validMoves.append(queen)
-
-                elif currentSpace == "Knight":
-                    currentKnight = []
-                    currentKnight.append(x)
-                    currentKnight.append(y)
-                    knight = validKnight(Colour,currentKnight,Board)
-                    validMoves.append(knight)
-
-                elif currentSpace == "WKing":
-                    currentWKing = []
-                    currentKing.append(x)
-                    currentKing.append(y)
-                    kingMoves = validKing(Colour,currentKing,Board)
-                    whiteKing.append(kingMoves)
-
-                elif currentSpace == "BKing":
-                    currentKing = []
-                    currentKing.append(x)
-                    currentKing.append(y)
-                    kingMoves = validKing(Colour, currentKing, Board)
-                    blackKing.append(kingMoves)
+    whileGameIsOn(Colour,Board)
 
 
-        if Colour == "White":
-            possibleMove = canKingMoveHere(Colour,whiteKing,validMoves)
-            validMoves.append(possibleMove)
-            Colour = "Black"
-
-        elif Colour == "Black":
-            possibleMove = canKingMoveHere(Colour,blackKing,validMoves)
-            validMoves.append(possibleMove)
-            Colour = "White"
