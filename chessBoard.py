@@ -119,12 +119,8 @@ def printBoardValues():
     print("")
 
 
+#https://stackoverflow.com/questions/55650138/how-to-get-a-piece-in-python-chess
 def getInputFromUser(board):
-
-    selectedMove = ""
-    while(True):
-        print(board)
-        print("")
         print("Enter one of these moves")
         bMoves = getMoveList(board)
         print(bMoves)
@@ -147,14 +143,13 @@ def getInputFromUser(board):
 
         elif move in bMoves:
             selectedMove = move
-            break
+            #break
 
         else:
             print("Invalid Entry Please Try Again ")
 
 
-    return selectedMove
-
+        return selectedMove
 
 if __name__ == '__main__':
 
@@ -163,6 +158,14 @@ if __name__ == '__main__':
     print("")
     currentColour = "White"
     yourColour = selectColour()
+    computerColour=""
+
+    if yourColour == "White":
+        computerColour = "Black"
+    else:
+        computerColour= "White"
+
+
     selectDiff = selectDiff()
 
     while (True):
@@ -174,7 +177,7 @@ if __name__ == '__main__':
 
         #This means it is the computers turn
         elif yourColour != currentColour:
-            move = checkMovesRating(board,selectDiff)
+            move = checkMovesRating(board,selectDiff,yourColour,computerColour)
             board.push_san(move)
             currentColour = changeColour(currentColour)
 
@@ -184,4 +187,4 @@ if __name__ == '__main__':
         insufficient(board)
         threeFoldRep(board)
         fiftyMoveNoCap(board)
-        isGameOver(board)
+        isGameOver(board,currentColour)
