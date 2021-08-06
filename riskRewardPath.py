@@ -1,10 +1,10 @@
 import sys
 import chess
 import random
+from openDatabase import *
 
 #Creating a risk reward system
 #Creating an evaluation Function
-
 def pieceAt(board,position):
     p1 = position[0]
     if p1=="a":
@@ -151,13 +151,13 @@ def pieceAt(board,position):
         elif "h8"==position:
             return board.piece_at(chess.H8)
 
-
-
 def getPieceOnBoardSpot(board, move):
     position = move[-2:]
     return pieceAt(board,position)
 
 
+def getPosition(move):
+    return move[-2:]
 
 def piecesWorth():
     pieces = {}
@@ -176,49 +176,138 @@ def piecesWorth():
     return pieces
 
 
-
 #Perform a move a find out next likely moves based off the move
 def calculateMoveValue(board,colour,computerColour,move):
 
-    if "#" in move && colour==computerColour:
+    if "#" in move and colour==computerColour:
         return "WIN"
 
+    elif "#" in move and colour!=computerColour:
+        return "LOSE"
+
+    elif "+" in move and colour==computerColour:
+        return "CHECK WINNING"
+
+    elif "+" in move and colour!=computerColour:
+        return "CHECK LOSING"
+
     else:
-        #if currentDepth < selectDiff:
         piece = getPieceOnBoardSpot(board, move)
         pieces = piecesWorth()
-        return pieces[piece], move
+        return pieces[piece]
 
+'''
+Returns a Boolean
 
+'''
+def SafeCheck(board, position, colour, checkDepth = 0):
+    allComputerMoves = getMoveList(board)
+    CheckCapture = False
+    tempBoard = board
+
+    if not allComputerMoves:
+        print("Test")
+
+    for moveL in allComputerMoves:
+        MovePosition  = getPosition(moveL)
+        if colour == "White":
+            if position == MovePosition:
+                CheckCapture = True
+                tempBoard.push_san(moveL)
+                SafeCheck(tempBoard,position,"Black",checkDepth+1)
+                break
+
+        elif colour == "Black":
+            if position == MovePosition:
+                CheckCapture = True
+                tempBoard.push_san(moveL)
+                SafeCheck(tempBoard,position,"White", checkDepth+1)
+                break
+
+    return CheckCapture
 
 
 #White Will Try to Minimize
 #Black Will Try to Maximize
-def alphaBetaPruning(board,depth,maxDepth,colour,computerColour,alpha,beta):
+def alphaBetaPruning(board,depth,maxDepth,colour,computerColour,alpha,beta,move):
     allComputerMoves = getMoveList(board)
+    safeCheckResults = False
+    if depth == maxDepth+1:
+        if colour == "White":
+            return calculateMoveValue(board, "Black", computerColour,move), move
+        else:
+            return calculateMoveValue(board,"White",computerColour,move), move
+
     if colour == "White":
         bestVal = float('inf')
+        currentMove = ""
         for move in allComputerMoves:
             futureBoard = board
             futureBoard.push_san(move)
-            value, move = alphaBetaPruning(futureBoard,depth+1,maxDepth,"Black",computerColour,alpha,beta)
-            bestVal = min(bestVal,value)
-            alpha = min(alpha,bestVal)
+            value, move = alphaBetaPruning(futureBoard,depth+1,maxDepth,"Black",computerColour,alpha,beta, move)
+
+            if move == "WIN":
+                if depth==0:
+                    return value, move
+
+            elif move == "LOSE":
+                break
+
+            elif move == "CHECK WINNING":
+                safeCheckResults = SafeCheck(board, position, colour, 0)
+                if safeCheckResults == True and depth == 0:
+                    return value, move
+
+            elif move == "CHECK LOSING":
+                safeCheckResults = SafeCheck(board, position, colour, 0)
+                if safeCheckResults == True:
+                    break
+
+            else:
+                bestVal = min(bestVal,value)
+                oldAlpha = alpha
+                alpha = min(alpha,bestVal)
+
+
+            if oldAlpha>alpha:
+                currentMove = move
             if beta<=alpha:
                 break
-        return calculateMoveValue(board,colour,computerColour,bestVal)
+        return alpha, currentMove
 
     else:
         bestVal = float('-inf')
+        currentMove = ""
         for move in allComputerMoves:
             futureBoard = board
             futureBoard.push_san(move)
-            value, move = alphaBetaPruning(futureBoard,depth+1,maxDepth,"White",computerColour,alpha,beta)
-            bestVal = min(bestVal,balue)
-            beta = min(beta,bestVal)
+            value, move = alphaBetaPruning(futureBoard,depth+1,maxDepth,"White",computerColour,alpha,beta,move)
+            if move == "WIN":
+                if depth == 0:
+                    return value, move
+            elif move =="LOSE":
+                break
+
+            elif move == "CHECK WINNING":
+                safeCheckResults = SafeCheck(board, position, colour, 0)
+                if safeCheckResults == True:
+                    if safeCheckResults == True and depth == 0:
+                        return value, moves
+
+
+
+            elif move == "CHECK LOSING":
+                break
+
+
+            bestVal = max(bestVal,value)
+            oldABeta = beta
+            beta = max(beta,bestVal)
+            if oldBeta<beta:
+                currentMove = move
             if beta<=alpha:
                 break
-        return calculateMoveValue(board,colour,computerColour,bestVal)
+        return beta, currentMove
 
 
 
@@ -272,20 +361,15 @@ def performTree(board,colour,computerColour, selectDiff,currentDepth,bestMoveLis
 
 def checkMovesRating(board,selectDiff,colour,computerColour):
     print("Make Computer Move")
-    #allComputerMoves = getMoveList(board)
     bestMoveList = []
-    #board,colour,computerColour, allComputerMoves,selectDiff,currentDepth,bestMoveList):
-    #move = performTree(board,colour,computerColour ,allComputerMoves,selectDiff,0,bestMoveList)
-
     alpha = float('-inf')
     beta = float('inf')
-    value, move = alphaBetaPruning(board,selectDiff,colour,computerColour,alpha,beta)
+    value, move = alphaBetaPruning(board,selectDiff,colour,computerColour,alpha,beta,"")
     if value==0:
         print("No Best Option")
     else:
         print("Best Move")
         print(move)
-
     return move
 
 def getMoveList(board):
