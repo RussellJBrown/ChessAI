@@ -1,91 +1,12 @@
 import chess
 import sys
 from riskRewardPath import *
+import os
+import random
+import ast
+from testEndGame import *
+from OpeningSetup import *
 
-def checkmate(board,currentColour):
-    checkmate = board.is_checkmate()
-    if checkmate == True:
-        print(currentColour + " is the Winner")
-        sys.exit()
-
-def stalemate(board):
-    stalemate = board.is_stalemate()
-    if stalemate == True:
-        print("Stalemate Game is a Draw")
-        sys.exit()
-
-def insufficient(board):
-    insufficient = board.is_insufficient_material()
-    if insufficient == True:
-        print("The game is a draw by insufficient material")
-        sys.exit()
-
-def threeFoldRep(board):
-    threeRep = board.can_claim_threefold_repetition()
-    if threeRep == True:
-        print("Draw by Repition")
-        sys.exit()
-
-def fiftyMoveNoCap(board):
-    noCap = board.can_claim_fifty_moves()
-    if noCap == True:
-        print("No Capture in 50 moves, Game is a Draw")
-        sys.exit()
-
-def isGameOver(board,currentColour):
-    checkmate(board,currentColour)
-    stalemate(board)
-    insufficient(board)
-    threeFoldRep(board)
-    gameOver = board.is_game_over()
-    if gameOver == True:
-        print("Game Over for a different reason")
-        print("Add Reason Later")
-        sys.exit()
-    return False
-
-def selectColour():
-    print("Would you prefer to be White or Black?")
-    x = ""
-    yourColour = ""
-    while(True):
-        x = input()
-        if x == "B":
-            yourColour = "Black"
-            break
-
-        elif x == "b":
-            yourColour = "Black"
-            break
-
-        elif x == "Black":
-            yourColour = "Black"
-            break
-
-        elif x == "black":
-            yourColour = "Black"
-            break
-
-        elif x == "W":
-            yourColour = "White"
-            break
-
-        elif x == "w":
-            yourColour = "White"
-            break
-
-        elif x =="White":
-            yourColour = "White"
-            break
-
-        elif x == "white":
-            yourColour = "White"
-            break
-
-        print("Invalid entry try again")
-
-
-    return yourColour
 
 def changeColour(currentColour):
         if currentColour == "White":
@@ -95,15 +16,6 @@ def changeColour(currentColour):
             currentColour = "White"
 
         return currentColour
-
-def selectDiff():
-    while(True):
-        print("Select a Number between 1 - 10 for Computer Level")
-        x = input()
-        x = int(x)
-        if x >= 1 and x<=10:
-            return x
-        print("Invalid entry")
 
 def undoMove(Board):
     Board = Board.pop()
@@ -117,7 +29,6 @@ def printBoardValues():
         for j in alphaBoard:
                 print(i+j ,end=" ")
     print("")
-
 
 #https://stackoverflow.com/questions/55650138/how-to-get-a-piece-in-python-chess
 def getInputFromUser(board):
@@ -143,7 +54,7 @@ def getInputFromUser(board):
 
         elif move in bMoves:
             selectedMove = move
-            #break
+            #breakd
 
         else:
             print("Invalid Entry Please Try Again ")
@@ -154,19 +65,12 @@ def getInputFromUser(board):
 if __name__ == '__main__':
 
     board = chess.Board()
-    print("Starting Chess Game")
-    print("")
-    currentColour = "White"
-    yourColour = selectColour()
-    computerColour=""
-
-    if yourColour == "White":
-        computerColour = "Black"
-    else:
-        computerColour= "White"
-
-
+    popularOpening = getOpeningList()
+    computerColour, path = FirstSetUp()
     selectDiff = selectDiff()
+    moveCount = 0
+    inOpening = True
+    movingList = []
 
     while (True):
         #This means it is your Turn
@@ -174,17 +78,36 @@ if __name__ == '__main__':
             move = getInputFromUser(board)
             board.push_san(move)
             currentColour = changeColour(currentColour)
+            if moveCount == 0:
+                path = path+"/"+move
+                movingList = os.listdir(path)
+            if inOpening==True:
+                movingList = updatedMoveList(move,movingList,path)
+                if not movingList:
+                    inOpening = False
+                    print("Out of Opening")
+            moveCount+=1
 
         #This means it is the computers turn
         elif yourColour != currentColour:
-            move = checkMovesRating(board,selectDiff,yourColour,computerColour)
+            if moveCount == 0:
+                path = path+"/"+move
+                movingList = os.listdir(path)
+
+            if inOpening==True:
+                print("Changed to Blacks turn")
+                move, moveList = checkIfInOpen(moveCount,movingList)
+                if move == "No Move":
+                    isOpening=False
+                    print("Out of Opening")
+            if isOpening==False:
+                print("Out of Opening")
+                move = checkMovesRating(board,selectDiff,yourColour,computerColour)
+
+            print("Below this line")
+            print(move)
             board.push_san(move)
             currentColour = changeColour(currentColour)
+            moveCount+=1
 
-
-        checkmate(board,currentColour)
-        stalemate(board)
-        insufficient(board)
-        threeFoldRep(board)
-        fiftyMoveNoCap(board)
         isGameOver(board,currentColour)
