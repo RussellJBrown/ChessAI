@@ -7,7 +7,11 @@ import ast
 from testEndGame import *
 from OpeningSetup import *
 
+'''
+currentColour: the current players colour
 
+Changes the players colour
+'''
 def changeColour(currentColour):
         if currentColour == "White":
             currentColour = "Black"
@@ -17,10 +21,16 @@ def changeColour(currentColour):
 
         return currentColour
 
+'''
+Not yet implemented
+'''
 def undoMove(Board):
     Board = Board.pop()
     return Board
 
+'''
+Prints the current board state
+'''
 def printBoardValues():
     alphaBoard = ["a","b","c","d","e","f","g","h"]
     numBoard = ["8","7","6","5","4","3","2","1"]
@@ -35,12 +45,12 @@ def getInputFromUser(board):
         print("Enter one of these moves")
         bMoves = getMoveList(board)
         print(bMoves)
-        print("")
-        print("Undo Previous Moves By Typing: 'Undo' ")
-        print("")
-        print("To see board values type: 'PB'")
         move = input()
 
+       
+        if move in bMoves:
+            return move
+       
         #Undo feature not implemented yet
         #if move == "Undo" or move == "undo" or move == "U" or move == "u":
         #    board = undoMove(board)
@@ -52,62 +62,69 @@ def getInputFromUser(board):
             sys.exit()
 
 
-        elif move in bMoves:
-            selectedMove = move
-            #breakd
-
-        else:
+        elif move not in bMoves:
             print("Invalid Entry Please Try Again ")
+            move = getInputFromUser(board)
 
+        return move
 
-        return selectedMove
 
 if __name__ == '__main__':
-
     board = chess.Board()
     popularOpening = getOpeningList()
-    computerColour, path = FirstSetUp()
-    selectDiff = selectDiff()
+    yourColour, computerColour, path = FirstSetUp()
+    diff = selectDiff()
+    currentColour="White"
     moveCount = 0
     inOpening = True
     movingList = []
-
+    openingMove = ""
+    temppath=""
+    move=""
+    InFirstMove=True
     while (True):
+        moveCount+=1
+        print(board)
+    
+
         #This means it is your Turn
         if yourColour == currentColour:
+            print("User Turn")
             move = getInputFromUser(board)
             board.push_san(move)
             currentColour = changeColour(currentColour)
-            if moveCount == 0:
-                path = path+"/"+move
-                movingList = os.listdir(path)
+            if moveCount == 1:
+                temppath = path+"/"+move
+                openingMove = move
+                # print("Checking If Move Count 1 reached")
+                movingList = os.listdir(temppath)
+                     
             if inOpening==True:
-                movingList = updatedMoveList(move,movingList,path)
+                # print("Printing out Move Out Move Count")
+                # print(moveCount)
+                movingList = updatedMoveList(str(moveCount)+move,movingList,temppath)            
+                print(len(movingList))
                 if not movingList:
                     inOpening = False
-                    print("Out of Opening")
-            moveCount+=1
+                    # print("Out of Opening")
 
         #This means it is the computers turn
         elif yourColour != currentColour:
-            if moveCount == 0:
-                path = path+"/"+move
-                movingList = os.listdir(path)
-
+            print("Computer Turn")                       
             if inOpening==True:
-                print("Changed to Blacks turn")
-                move, moveList = checkIfInOpen(moveCount,movingList)
-                if move == "No Move":
-                    isOpening=False
-                    print("Out of Opening")
-            if isOpening==False:
-                print("Out of Opening")
-                move = checkMovesRating(board,selectDiff,yourColour,computerColour)
+                move, moveList = checkIfInOpen(board,str(moveCount),movingList,path+"/"+openingMove)               
+                if move == "No Move" or len(moveList)==0:          
+                    inOpening=False
+                       
+            if inOpening==False:
+                # print("Out of Opening")                                
+                move = performTree(board,currentColour,computerColour,diff,0,movingList,"",0)
+                
 
-            print("Below this line")
-            print(move)
+           
+            
             board.push_san(move)
             currentColour = changeColour(currentColour)
-            moveCount+=1
 
         isGameOver(board,currentColour)
+

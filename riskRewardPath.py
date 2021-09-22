@@ -2,6 +2,12 @@ import sys
 import chess
 import random
 from openDatabase import *
+import copy
+from getBoardValue import *
+from CheckEndGame import EndGame
+import ast
+import math
+from chessBoard import changeColour
 
 #Creating a risk reward system
 #Creating an evaluation Function
@@ -152,13 +158,91 @@ def pieceAt(board,position):
             return board.piece_at(chess.H8)
 
 def getPieceOnBoardSpot(board, move):
-    position = move[-2:]
-    return pieceAt(board,position)
+    if "#" in move or "+" in move:
+        position=move[:-1]
+        # print("Reached in get Piece ////")
+        # print(position)
+        return pieceAt(board,position[-2:])
+        
+    else: 
+        return pieceAt(board,move[-2:]) 
 
 
+def convertPiece(piece):
+    if repr(piece).lower() == "'p'":
+        #print("Pawn")
+        return "P" 
+    elif repr(piece).lower() == "'b'":
+        #print("Bish")
+        return "B"
+    elif repr(piece).lower() == "'r'":
+        #print("Rook")
+        return "R"
+    elif repr(piece).lower() == "'n'":
+        #print("Night")
+        return "N"
+    elif repr(piece).lower() == "'q'":
+       # print("Queen")
+        return "Q"
+    elif repr(piece).lower() == "'k'":
+       # print("King")
+        return "K"
+    else:
+        return piece
+
+
+'''
+Returns the piece being moved
+
+Move: The current move being checked by the user. 
+'''
+def getPieceBeingMove(move):
+    piece = move[0]
+    if piece == "a" or piece == "b" or piece == "c" or piece == "d" or piece == "e" or piece == "f" or piece == "g" or piece == "h":
+        return "P"
+    
+    elif "O" in move:
+        return "K"
+
+    else:
+        return convertPiece(piece)
+
+
+def getPlaceFromMove(move):
+    
+    if "#" in move or "+" in move:
+        move=move[-1]
+        return move[-2:]
+        
+    else: 
+        return move[-2:]
+
+
+'''
+move: the move of the player
+
+returns the last 2 charactes of a move
+'''
 def getPosition(move):
     return move[-2:]
 
+
+'''
+file = file Name
+
+Reads Dictionary from file.
+'''
+def readDictionary(file):
+    file = open(file,"r")
+    contents = file.read()
+    moveValues=ast.literal_eval(contents)
+    file.close()
+    return moveValues
+
+
+'''
+Method Returns a Dictionary that contains the point values for each piece
+'''
 def piecesWorth():
     pieces = {}
     pieces['P'] = 1
@@ -176,202 +260,259 @@ def piecesWorth():
     return pieces
 
 
-#Perform a move a find out next likely moves based off the move
-def calculateMoveValue(board,colour,computerColour,move):
+'''
+Method opens up Dictionary of piece to determine what the piece is worth on that spot.
 
-    if "#" in move and colour==computerColour:
-        return "WIN"
+piece: represents the current piece being moved
+colour: current colour
+ff: Are we in the lateGame
+'''
+def placeWorthWithPiece(piece,colour,lateGame):
+    piece=str(repr(piece))
+    positionWorth = {}
+    try:
+        if colour.lower()=="black":
+            if piece == "'P'":
+                positionWorth = readDictionary("pawnBlack.txt")  
+                piece="P"
+            elif piece == "'R'":
+                positionWorth = readDictionary("rookBlack.txt")  
+                piece="R"
+            elif piece == "'N'":
+                positionWorth = readDictionary("knightBlack.txt")  
+                piece="N"
+            elif piece == "'K'" and lateGame==False:
+                print("King Early Game")
+                positionWorth = readDictionary("kingEarlyBlack.txt")  
+                piece="K"
+            elif piece == "'K'" and lateGame==True:
+                print("King Late Game")
+                positionWorth = readDictionary("kingLateBlack.txt")  
+                piece="K"
+            elif piece == "'Q'":
+                positionWorth = readDictionary("queenBlack.txt")  
+                piece = "Q"
+            elif piece == "'B'":
+                positionWorth = readDictionary("bishopBlack.txt")  
+                piece="B"
 
-    elif "#" in move and colour!=computerColour:
-        return "LOSE"
+        elif colour.lower()=="white":
+            if piece=="'P'": 
+                positionWorth = readDictionary("pawnWhite.txt")                
+                piece="P"
+            elif piece=="'R'":
+                positionWorth = readDictionary("rookWhite.txt")  
+                piece="R"
+            elif piece=="'N'":
+                positionWorth = readDictionary("knightWhite.txt")  
+                piece="N"
+            elif piece=="'K'" and lateGame==True:
+                print("Late Game")
+                positionWorth = readDictionary("kingLateWhite.txt")
+                piece="K"
+            elif piece=="'K'" and lateGame==False:
+                print("Early Game")
+                positionWorth = readDictionary("kingEarlyWhite.txt")  
+                piece="K"
+            elif piece=="'Q'":
+                positionWorth = readDictionary("queenWhite.txt")  
+                piece="Q"
+            elif piece=="'B'":
+                positionWorth = readDictionary("bishopWhite.txt")       
+                piece="B"
+    except Exception as e:
+        print("Error in Places With Piece Worth")
+        print(e)
+        sys.exit()
 
-    elif "+" in move and colour==computerColour:
-        return "CHECK WINNING"
 
-    elif "+" in move and colour!=computerColour:
-        return "CHECK LOSING"
 
+    return positionWorth
+
+
+'''
+move: the current move of the player
+visitedPlatforms: Dictionary of the nodes and there values, used to ensure no place is visited multiple times.
+'''
+def EnterMoveIntoDictionary(move, visitedPlatforms, value,depth):
+    if move not in visitedPlatforms:
+        visitedPlatforms[str(depth)+move] = value
+        return visitedPlatforms
     else:
-        piece = getPieceOnBoardSpot(board, move)
-        pieces = piecesWorth()
-        return pieces[piece]
+        return visitedPlatforms
 
 '''
-Returns a Boolean
+move: the current mvoe of the player
+visitedPlatforms: Dictionary of moves the player.
+depth: current depth
+'''
+def CheckMoveIntoDictionary(move, visitedPlatforms, depth):
+    dictMoveKey = str(depth) + move
+    if dictMoveKey in visitedPlatforms:
+        return True
+    else:
+        return False
+
 
 '''
-def SafeCheck(board, position, colour, checkDepth = 0):
-    allComputerMoves = getMoveList(board)
-    CheckCapture = False
-    tempBoard = board
+board: currently represents the board state
+colour: current colour
+computerColour: Computer Colour
+move: current move
+'''
+def calculateMoveValue(board,colour,move,lateGame):
+    print("Calculated Move Value")
+    value=0
+    white="White"
+    black="Black"
+    if "#" in move and colour==white:
+        value+=100
 
-    if not allComputerMoves:
-        print("Test")
+    elif "#" in move and colour==black:
+        value+=-100
 
-    for moveL in allComputerMoves:
-        MovePosition  = getPosition(moveL)
+    elif "+" in move and colour==white and lateGame==True:
+        value+=50
+
+    elif "+" in move and colour==black and lateGame==True:
+        value+=-50
+
+    elif "O-O-O" in move and colour == white:
+        value+=50
+
+    elif "O-O-O" in move and colour == black:
+        value+=-50
+
+    elif "0-0" in move and colour == white:
+        value+=50
+
+    elif "0-0" in move and colour == black:
+        value+=-50
+
+    elif "=" in move and colour == white:
+        value+=25
+    elif "=" in move and colour == black:
+        value+=25
+
+    valueT,piece_value = BoardValue(board,lateGame)
+    value+=valueT 
+    return value,piece_value
+
+'''
+board: represents the current board state
+depth: represents the current colour
+maxDepth: the max depth the algorthim will reach
+colour: current colour
+alpha: represents the alpha value
+beta: represents the beta balue
+move: the current move
+'''
+def alphaBetaTree(board,depth,maxDepth,colour,alpha,beta,move):
+    allComputerMoves = getMoveList(board)    
+    if depth == maxDepth:
+        endgame=EndGame(board)
         if colour == "White":
-            if position == MovePosition:
-                CheckCapture = True
-                tempBoard.push_san(moveL)
-                SafeCheck(tempBoard,position,"Black",checkDepth+1)
-                break
-
-        elif colour == "Black":
-            if position == MovePosition:
-                CheckCapture = True
-                tempBoard.push_san(moveL)
-                SafeCheck(tempBoard,position,"White", checkDepth+1)
-                break
-
-    return CheckCapture
-
-
-#White Will Try to Minimize
-#Black Will Try to Maximize
-def alphaBetaPruning(board,depth,maxDepth,colour,computerColour,alpha,beta,move):
-    allComputerMoves = getMoveList(board)
-    safeCheckResults = False
-    if depth == maxDepth+1:
-        if colour == "White":
-            return calculateMoveValue(board, "Black", computerColour,move), move
+            return calculateMoveValue(board,"Black",move,endgame)
         else:
-            return calculateMoveValue(board,"White",computerColour,move), move
+            return calculateMoveValue(board,"White",move,endgame)
 
-    if colour == "White":
-        bestVal = float('inf')
-        currentMove = ""
-        for move in allComputerMoves:
-            futureBoard = board
-            futureBoard.push_san(move)
-            value, move = alphaBetaPruning(futureBoard,depth+1,maxDepth,"Black",computerColour,alpha,beta, move)
-
-            if move == "WIN":
-                if depth==0:
-                    return value, move
-
-            elif move == "LOSE":
-                break
-
-            elif move == "CHECK WINNING":
-                safeCheckResults = SafeCheck(board, position, colour, 0)
-                if safeCheckResults == True and depth == 0:
-                    return value, move
-
-            elif move == "CHECK LOSING":
-                safeCheckResults = SafeCheck(board, position, colour, 0)
-                if safeCheckResults == True:
-                    break
-
-            else:
-                bestVal = min(bestVal,value)
-                oldAlpha = alpha
-                alpha = min(alpha,bestVal)
-
-
-            if oldAlpha>alpha:
-                currentMove = move
-            if beta<=alpha:
-                break
-        return alpha, currentMove
-
-    else:
+    if colour=="White":
         bestVal = float('-inf')
-        currentMove = ""
-        for move in allComputerMoves:
-            futureBoard = board
-            futureBoard.push_san(move)
-            value, move = alphaBetaPruning(futureBoard,depth+1,maxDepth,"White",computerColour,alpha,beta,move)
-            if move == "WIN":
-                if depth == 0:
-                    return value, move
-            elif move =="LOSE":
-                break
-
-            elif move == "CHECK WINNING":
-                safeCheckResults = SafeCheck(board, position, colour, 0)
-                if safeCheckResults == True:
-                    if safeCheckResults == True and depth == 0:
-                        return value, moves
-
-
-
-            elif move == "CHECK LOSING":
-                break
-
-
-            bestVal = max(bestVal,value)
-            oldABeta = beta
-            beta = max(beta,bestVal)
-            if oldBeta<beta:
-                currentMove = move
+        for moveInList in allComputerMoves:
+            futureBoard = board.copy()
+            futureBoard.push_san(moveInList)            
+            treeValue,piece_value = alphaBetaTree(futureBoard,depth+1,maxDepth,"Black",alpha,beta,moveInList)
+            best = max(bestVal,treeValue)
+            alpha = max(alpha,best)
             if beta<=alpha:
                 break
-        return beta, currentMove
+            return treeValue, piece_value
+
+    else:
+        bestVal = float('inf')
+        for moveInList in allComputerMoves:
+            futureBoard = board.copy()
+            print("Trying to Push")
+            print(moveInList)
+            futureBoard.push_san(moveInList)
+            treeValue,piece_value = alphaBetaTree(futureBoard,depth+1,maxDepth,"White",alpha,beta,moveInList)
+            best = min(bestVal,treeValue)
+            beta = min(beta, best)
+            if beta<=alpha:
+                break
+
+            return treeValue,piece_value
 
 
+'''
+board: A state of the board that will be analyzed
+colour: current players move
+computerColour: Computer Colour
+selectDiff: The Difficulty of the computer
+currentDepth: Current Depth of the search tree
+bestMoveList: Currently unknown if this is still needed
+move: the most recently move by player or AI
 
-#Board is the Current Boards State
-#allComputerMoves is the list of all valid moves in current state
-#selectDiff int used to perform diff depth
-def performTree(board,colour,computerColour, selectDiff,currentDepth,bestMoveList):
-    print("Perform Tree")
-    futureBoard = board
-    bestMove = allComputerMoves[0]
-    bestMoveValue = 0
+Method sets new board state with one of the possible moves 
 
-    if selectDiff==currentDepth:
-        return move
+'''
+def performTree(board,currentColour,computerColour, selectDiff,currentDepth,bestMoveList,move,value,BlackValue,WhiteValue,previousValue):
+    print("Reached Perform Tree")
+    futureBoard = board.copy()
+    bestMove=""
+    HighestValue = -math.inf
+    LowestValue = math.inf
 
+    #Method 1
+    allComputerMoves = getMoveList(board)
+    newColour = changeColour(currentColour)
     for move in allComputerMoves:
-        #futureBoard.push_san(move)
-        value = calculateMoveValue(futureBoard,colour,computerColour,selectDiff,currentDepth)
-        if value == "WIN":
-            return move
+      print("Check if this move is best") 
+      futureBoard.push_san(move) 
+      value, moveValue = checkMovesRating(futureBoard,selectDiff,newColour)
+      futureBoard.pop()
+      if currentColour=="White":
+          if value>HighestValue:
+              bestMove=move
+              HighestValue=value
+        
+          if ((moveValue>0 and WhiteValue==BlackValue) or moveValue>previousValue):
+              bestMove=move
+              previousValue=moveValue
 
-        if colour=="black":
-            if value<bestMoveValue:
-                bestMoveValue = value
-                bestMove = move
+          
+      else:
+          if value<LowestValue:
+              bestMove=move
+              LowestValue=value
+          if((moveValue<0 and WhiteValue==BlackValue)or moveValue<previousValue):
+              bestMove=move
+              previousValue=moveValue
 
-        if colour=="white":
-            if value>bestMoveValue:
-                bestMostValue = value
-                bestMove = move
+    print(bestMove)
+    return bestMove,previousValue
 
-    futureBoard.push_san(bestMove)
-    bestMoveList.append(bestMove)
+'''
+board: A state of the board that will be analyzed
+selectDiff: Currently represents the max depth we are looking for.
+colour: current player move
+computerColour: Represents the colour of the computer.
+InEndGame: Tells if the game is in the end game state, used to determine better moves for king. 
 
-    if colour == computerColour:
-        if computerColour=="white":
-            colour = "black"
-            return performTree(futureBoard,colour, computerColour, allComputerMoves, selectDiff, currentDepth+1,bestMoveList)
-        else:
-            colour = "white"
-            return performTree(futureBoard,colour, computerColour, allComputerMoves, selectDiff, currentDepth+1,bestMoveList)
+Currently acting as an inbetween method, don't know if this needed for the long term future
+
+#To Do find Depth Limit
+'''
+def checkMovesRating(board,selectDiff,colour):
+    value,moveValue = alphaBetaTree(board,0,selectDiff,colour,-math.inf,math.inf,"")
+    return value, moveValue
 
 
-    else:
-        if colour == "white":
-            colour = "black"
-            return performTree(futureBoard, colour, computerColour, allComputerMoves, selectDiff, currentDepth, bestMoveList)
-        else:
-            colour = "white"
-            return performTree(futureBoard, colour, computerColour, allComputerMoves, selectDiff, currentDepth, bestMoveList)
+'''
+board: A state of the board
 
-def checkMovesRating(board,selectDiff,colour,computerColour):
-    print("Make Computer Move")
-    bestMoveList = []
-    alpha = float('-inf')
-    beta = float('inf')
-    value, move = alphaBetaPruning(board,selectDiff,colour,computerColour,alpha,beta,"")
-    if value==0:
-        print("No Best Option")
-    else:
-        print("Best Move")
-        print(move)
-    return move
-
+Gets a List of moves in the current board and does basic string manipulation
+'''
 def getMoveList(board):
     moves = board.legal_moves
     moves = str(moves)
@@ -381,5 +522,3 @@ def getMoveList(board):
     return allComputerMoves
 
 
-def startingOpening(board):
-    print("Computer Does Starting Opening")
