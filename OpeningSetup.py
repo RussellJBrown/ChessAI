@@ -1,3 +1,9 @@
+import os
+import ast
+import random
+import sys
+
+
 def selectColour():
     print("Would you prefer to be White or Black?")
     x = ""
@@ -75,39 +81,75 @@ def getOpeningList():
     moveList.append('Nh3')
     return moveList
 
+def getMoveList(board):
+    moves = board.legal_moves
+    moves = str(moves)
+    split_string = moves.split("(")
+    split_string2 = split_string[1].split(")")
+    allComputerMoves = split_string2[0].split(", ")
+    sortedMoveList = [None]*1
+    for i in allComputerMoves:
+        if '#' in i:
+            sortedMoveList[0]=i
+            return sortedMoveList
+    return allComputerMoves
 
-#Checking if in Opening for the computer
-def checkIfInOpen(move,list):
-    openingMove = "No Move"
-    possibleMoves = []
-    for i in list:
-        file = open(path+"/"+i,"r")
-        contents= file.read()
-        dictionary = ast.literal_eval(contents)
-        if move not in dictionary:
-            list.remove(i)
-        if move in dictionary:
-            value = dictionary[move]
-            possibleMoves.append(value)
-    try:
-        openingMove = random.choice(possibleMoves)
-    except:
-        pass
-    return openingMove, list
+'''
+board: The current Board of the game
+moveCount: The current move count of the game
+openinglists: the list of all the possible opening still viable
+path: current path used to find the opening data
 
-#Checking if in Opening for the Player
-def updatedMoveList(move,list,path):
-    openingMove = "No Move"
-    possibleMoves = []
+
+This method checks for the computer
+
+'''
+def checkIfInOpen(board,moveCount,openinglists,path):
+   CurrentComputerMoves = getMoveList(board)
+   possibleMovesForPlayer = []
+   lists=[]
+   openingMove = "No Move"
+   for i in openinglists:
+       file = open(path+"/"+i,"r")
+       contents= file.read()
+       dictionary = ast.literal_eval(contents)
+       for possibleMoves in CurrentComputerMoves:          
+           if moveCount+possibleMoves in dictionary:
+                possibleMovesForPlayer.append(possibleMoves)           
+   try:
+      openingMove = random.choice(possibleMovesForPlayer)
+   except Exception as e:
+        print(e)  
+
+   if openingMove != "No Move":
+     lists = remove(moveCount+openingMove,openinglists,path)
+   
+   return openingMove, lists
+
+def remove(move,list,path):
     for i in list:
         file = open(path+"/"+i,"r")
         contents = file.read()
         dictionary = ast.literal_eval(contents)
-        print(move)
         if move not in dictionary:
             list.remove(i)
 
     return list
+
+
+#Checking if in Opening for the Player
+def updatedMoveList(move,list,path):
+   for i in list:
+       file = open(path+"/"+i,"r")
+       contents= file.read()
+       dictionary = ast.literal_eval(contents) 
+       if move not in dictionary:
+             list.remove(i)
+   
+   
+
+
+   return list
 
 
 def FirstSetUp():
@@ -121,4 +163,4 @@ def FirstSetUp():
             computerColour = "Black"
         else:
             computerColour= "White"
-        return computerColour, path
+        return yourColour,computerColour, path
