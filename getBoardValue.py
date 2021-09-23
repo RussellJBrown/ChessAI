@@ -4,7 +4,7 @@ import sys
 def createDictionaryList():
     piecesValueWhite = []
     piecesValueBlack = []
-    
+
     piecesValueBlack.append(readDictionary("pawnBlack.txt"))
     piecesValueBlack.append(readDictionary("knightBlack.txt"))
     piecesValueBlack.append(readDictionary("bishopBlack.txt"))
@@ -12,15 +12,15 @@ def createDictionaryList():
     piecesValueBlack.append(readDictionary("queenBlack.txt"))
     piecesValueBlack.append(readDictionary("kingEarlyBlack.txt"))
     piecesValueBlack.append(readDictionary("kingLateBlack.txt"))
-    
+
     piecesValueWhite.append(readDictionary("pawnWhite.txt"))
     piecesValueWhite.append(readDictionary("knightWhite.txt"))
-    piecesValueWhite.append(readDictionary("bishopWhite.txt")) 
+    piecesValueWhite.append(readDictionary("bishopWhite.txt"))
     piecesValueWhite.append(readDictionary("rookWhite.txt"))
     piecesValueWhite.append(readDictionary("queenWhite.txt"))
     piecesValueWhite.append(readDictionary("kingEarlyWhite.txt"))
     piecesValueWhite.append(readDictionary("kingLateWhite.txt"))
-    
+
     return piecesValueBlack, piecesValueWhite
 
 
@@ -36,63 +36,71 @@ def readDictionary(file):
 def getValuePosition(piece,piecesValueBlack,piecesValueWhite,move,lateGame):
     piece_type=""
     piece_colour=""
+    value = 0
+    pieceValue=0
     try:
         piece_type = piece.piece_type
         piece_colour = piece.color
-    
+
         if piece_colour==False:
-            if piece_type==1:               
+            if piece_type==1:
                 pawnValues = piecesValueBlack[0]
                 value = pawnValues[move]
-                
+                pieceValue = -1
+
             if piece_type==2:
-                
                 knightValues = piecesValueBlack[1]
                 value = knightValues[move]
-                
+                pieceValue = -3
+
             if piece_type==3:
-                
-                bishopValues = piecesValueBlack[2] 
+                bishopValues = piecesValueBlack[2]
                 value = bishopValues[move]
-                
+                pieceValue = -3
+
             if piece_type==4:
-                
                 rookValues = piecesValueBlack[3]
                 value = rookValues[move]
-                
+                pieceValue = -5
+
             if piece_type==5:
-                
                 queenValues = piecesValueBlack[4]
                 value = queenValues[move]
-                
+                pieceValue = -9
+
             if piece_type==6 and lateGame==False:
-                               
                 kingValues = piecesValueBlack[5]
                 value = kingValues[move]
-                
+
             if piece_type==6 and lateGame:
                 kingValues = piecesValueBlack[6]
                 value = kingValues[move]
-                
+
         else:
             if piece_type==1:
                 pawnValues = piecesValueWhite[0]
                 value = pawnValues[move]
+                pieceValue = 1
+
             if piece_type==2:
                 knightValues = piecesValueWhite[1]
                 value = knightValues[move]
+                pieceValue = 3
 
             if piece_type==3:
-                bishopValues = piecesValueWhite[2] 
+                bishopValues = piecesValueWhite[2]
                 value = bishopValues[move]
-            
+                pieceValue = 3
+
             if piece_type==4:
                 rookValues = piecesValueWhite[3]
                 value = rookValues[move]
+                pieceValue = 5
 
             if piece_type==5:
                 queenValues = piecesValueWhite[4]
                 value = queenValues[move]
+                pieceValue = 9
 
             if piece_type==6 and lateGame==False:
                 kingValues = piecesValueWhite[5]
@@ -102,7 +110,7 @@ def getValuePosition(piece,piecesValueBlack,piecesValueWhite,move,lateGame):
                 kingValues = piecesValueWhite[6]
                 value = kingValues[move]
 
-        return value
+        return value, pieceValue
     except:
         return 0
 
@@ -112,7 +120,7 @@ def addValue(value, piece_value, valueT, piece_valueT):
     return value, piece_value
 
 def BoardValue(board,lateGame):
-    
+
     piecesValueBlack, pieceValueWhite = createDictionaryList()
     value = 0
     piece_value = 0
@@ -150,7 +158,7 @@ def BoardValue(board,lateGame):
 
     valueT,piece_valueT=getValuePosition(board.piece_at(chess.B3),piecesValueBlack,pieceValueWhite,"b3",lateGame)
     value, piece_value = addValue(value,piece_value,valueT,piece_valueT)
-    
+
     valueT,piece_valueT=getValuePosition(board.piece_at(chess.B4),piecesValueBlack,pieceValueWhite,"b4",lateGame)
     value, piece_value = addValue(value,piece_value,valueT,piece_valueT)
 
@@ -231,7 +239,7 @@ def BoardValue(board,lateGame):
 
     valueT,piece_valueT=getValuePosition(board.piece_at(chess.E5),piecesValueBlack,pieceValueWhite,"e5",lateGame)
     value, piece_value = addValue(value,piece_value,valueT,piece_valueT)
-    
+
     valueT,piece_valueT=getValuePosition(board.piece_at(chess.E6),piecesValueBlack,pieceValueWhite,"e6",lateGame)
     value, piece_value = addValue(value,piece_value,valueT,piece_valueT)
 
@@ -254,7 +262,7 @@ def BoardValue(board,lateGame):
 
     valueT,piece_valueT=getValuePosition(board.piece_at(chess.F4),piecesValueBlack,pieceValueWhite,"f4",lateGame)
     value, piece_value = addValue(value,piece_value,valueT,piece_valueT)
-    
+
     valueT,piece_valueT=getValuePosition(board.piece_at(chess.F5),piecesValueBlack,pieceValueWhite,"f5",lateGame)
     value, piece_value = addValue(value,piece_value,valueT,piece_valueT)
 
@@ -316,7 +324,5 @@ def BoardValue(board,lateGame):
 
     valueT,piece_valueT=getValuePosition(board.piece_at(chess.H8),piecesValueBlack,pieceValueWhite,"h8",lateGame)
     value, piece_value = addValue(value,piece_value,valueT,piece_valueT)
-    
+
     return value,piece_value
-
-

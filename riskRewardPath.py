@@ -163,15 +163,15 @@ def getPieceOnBoardSpot(board, move):
         # print("Reached in get Piece ////")
         # print(position)
         return pieceAt(board,position[-2:])
-        
-    else: 
-        return pieceAt(board,move[-2:]) 
+
+    else:
+        return pieceAt(board,move[-2:])
 
 
 def convertPiece(piece):
     if repr(piece).lower() == "'p'":
         #print("Pawn")
-        return "P" 
+        return "P"
     elif repr(piece).lower() == "'b'":
         #print("Bish")
         return "B"
@@ -194,13 +194,13 @@ def convertPiece(piece):
 '''
 Returns the piece being moved
 
-Move: The current move being checked by the user. 
+Move: The current move being checked by the user.
 '''
 def getPieceBeingMove(move):
     piece = move[0]
     if piece == "a" or piece == "b" or piece == "c" or piece == "d" or piece == "e" or piece == "f" or piece == "g" or piece == "h":
         return "P"
-    
+
     elif "O" in move:
         return "K"
 
@@ -209,12 +209,12 @@ def getPieceBeingMove(move):
 
 
 def getPlaceFromMove(move):
-    
+
     if "#" in move or "+" in move:
         move=move[-1]
         return move[-2:]
-        
-    else: 
+
+    else:
         return move[-2:]
 
 
@@ -273,38 +273,38 @@ def placeWorthWithPiece(piece,colour,lateGame):
     try:
         if colour.lower()=="black":
             if piece == "'P'":
-                positionWorth = readDictionary("pawnBlack.txt")  
+                positionWorth = readDictionary("pawnBlack.txt")
                 piece="P"
             elif piece == "'R'":
-                positionWorth = readDictionary("rookBlack.txt")  
+                positionWorth = readDictionary("rookBlack.txt")
                 piece="R"
             elif piece == "'N'":
-                positionWorth = readDictionary("knightBlack.txt")  
+                positionWorth = readDictionary("knightBlack.txt")
                 piece="N"
             elif piece == "'K'" and lateGame==False:
                 print("King Early Game")
-                positionWorth = readDictionary("kingEarlyBlack.txt")  
+                positionWorth = readDictionary("kingEarlyBlack.txt")
                 piece="K"
             elif piece == "'K'" and lateGame==True:
                 print("King Late Game")
-                positionWorth = readDictionary("kingLateBlack.txt")  
+                positionWorth = readDictionary("kingLateBlack.txt")
                 piece="K"
             elif piece == "'Q'":
-                positionWorth = readDictionary("queenBlack.txt")  
+                positionWorth = readDictionary("queenBlack.txt")
                 piece = "Q"
             elif piece == "'B'":
-                positionWorth = readDictionary("bishopBlack.txt")  
+                positionWorth = readDictionary("bishopBlack.txt")
                 piece="B"
 
         elif colour.lower()=="white":
-            if piece=="'P'": 
-                positionWorth = readDictionary("pawnWhite.txt")                
+            if piece=="'P'":
+                positionWorth = readDictionary("pawnWhite.txt")
                 piece="P"
             elif piece=="'R'":
-                positionWorth = readDictionary("rookWhite.txt")  
+                positionWorth = readDictionary("rookWhite.txt")
                 piece="R"
             elif piece=="'N'":
-                positionWorth = readDictionary("knightWhite.txt")  
+                positionWorth = readDictionary("knightWhite.txt")
                 piece="N"
             elif piece=="'K'" and lateGame==True:
                 print("Late Game")
@@ -312,13 +312,13 @@ def placeWorthWithPiece(piece,colour,lateGame):
                 piece="K"
             elif piece=="'K'" and lateGame==False:
                 print("Early Game")
-                positionWorth = readDictionary("kingEarlyWhite.txt")  
+                positionWorth = readDictionary("kingEarlyWhite.txt")
                 piece="K"
             elif piece=="'Q'":
-                positionWorth = readDictionary("queenWhite.txt")  
+                positionWorth = readDictionary("queenWhite.txt")
                 piece="Q"
             elif piece=="'B'":
-                positionWorth = readDictionary("bishopWhite.txt")       
+                positionWorth = readDictionary("bishopWhite.txt")
                 piece="B"
     except Exception as e:
         print("Error in Places With Piece Worth")
@@ -366,10 +366,10 @@ def calculateMoveValue(board,colour,move,lateGame):
     white="White"
     black="Black"
     if "#" in move and colour==white:
-        value+=100
+        value+=math.inf
 
     elif "#" in move and colour==black:
-        value+=-100
+        value+=-math.inf
 
     elif "+" in move and colour==white and lateGame==True:
         value+=50
@@ -395,7 +395,7 @@ def calculateMoveValue(board,colour,move,lateGame):
         value+=25
 
     valueT,piece_value = BoardValue(board,lateGame)
-    value+=valueT 
+    value+=valueT
     return value,piece_value
 
 '''
@@ -408,7 +408,7 @@ beta: represents the beta balue
 move: the current move
 '''
 def alphaBetaTree(board,depth,maxDepth,colour,alpha,beta,move):
-    allComputerMoves = getMoveList(board)    
+    allComputerMoves = getMoveList(board)
     if depth == maxDepth:
         endgame=EndGame(board)
         if colour == "White":
@@ -418,30 +418,34 @@ def alphaBetaTree(board,depth,maxDepth,colour,alpha,beta,move):
 
     if colour=="White":
         bestVal = float('-inf')
+        bestPieceVal = float('-inf')
         for moveInList in allComputerMoves:
             futureBoard = board.copy()
-            futureBoard.push_san(moveInList)            
+            futureBoard.push_san(moveInList)
             treeValue,piece_value = alphaBetaTree(futureBoard,depth+1,maxDepth,"Black",alpha,beta,moveInList)
-            best = max(bestVal,treeValue)
+            bestVal = max(bestVal,treeValue)
+            bestPieceVal = max(bestPieceVal,piece_value)
             alpha = max(alpha,best)
             if beta<=alpha:
                 break
-            return treeValue, piece_value
+        return bestVal, piece_value
 
     else:
         bestVal = float('inf')
+        bestPieceVal=float('inf')
         for moveInList in allComputerMoves:
             futureBoard = board.copy()
             print("Trying to Push")
             print(moveInList)
             futureBoard.push_san(moveInList)
             treeValue,piece_value = alphaBetaTree(futureBoard,depth+1,maxDepth,"White",alpha,beta,moveInList)
-            best = min(bestVal,treeValue)
+            bestVal = min(bestVal,treeValue)
+            bestPieceVal = min(bestPieceVal,piece_value)
             beta = min(beta, best)
             if beta<=alpha:
                 break
 
-            return treeValue,piece_value
+        return bestVal,piece_value
 
 
 '''
@@ -453,7 +457,7 @@ currentDepth: Current Depth of the search tree
 bestMoveList: Currently unknown if this is still needed
 move: the most recently move by player or AI
 
-Method sets new board state with one of the possible moves 
+Method sets new board state with one of the possible moves
 
 '''
 def performTree(board,currentColour,computerColour, selectDiff,currentDepth,bestMoveList,move,value,BlackValue,WhiteValue,previousValue):
@@ -467,25 +471,25 @@ def performTree(board,currentColour,computerColour, selectDiff,currentDepth,best
     allComputerMoves = getMoveList(board)
     newColour = changeColour(currentColour)
     for move in allComputerMoves:
-      print("Check if this move is best") 
-      futureBoard.push_san(move) 
+      print("Check if this move is best")
+      futureBoard.push_san(move)
       value, moveValue = checkMovesRating(futureBoard,selectDiff,newColour)
       futureBoard.pop()
-      if currentColour=="White":
+      if ((currentColour=="White" and (moveValue>=previousValue)) or (value == float("inf") and currentColour=="White"))  :
           if value>HighestValue:
               bestMove=move
               HighestValue=value
-        
-          if ((moveValue>0 and WhiteValue==BlackValue) or moveValue>previousValue):
+
+          if ((moveValue>0 and WhiteValue==BlackValue) or moveValue>previousValue and value!=float("inf")):
               bestMove=move
               previousValue=moveValue
 
-          
-      else:
+
+      elif((currentColour=="Black" and (moreValue<=previousValue)) or (value==float("-inf") and currentColour=="Black")):
           if value<LowestValue:
               bestMove=move
               LowestValue=value
-          if((moveValue<0 and WhiteValue==BlackValue)or moveValue<previousValue):
+          if((moveValue<0 and WhiteValue==BlackValue)or moveValue<previousValue and value!=float("-inf")):
               bestMove=move
               previousValue=moveValue
 
@@ -497,7 +501,7 @@ board: A state of the board that will be analyzed
 selectDiff: Currently represents the max depth we are looking for.
 colour: current player move
 computerColour: Represents the colour of the computer.
-InEndGame: Tells if the game is in the end game state, used to determine better moves for king. 
+InEndGame: Tells if the game is in the end game state, used to determine better moves for king.
 
 Currently acting as an inbetween method, don't know if this needed for the long term future
 
@@ -520,5 +524,3 @@ def getMoveList(board):
     split_string2 = split_string[1].split(")")
     allComputerMoves = split_string2[0].split(", ")
     return allComputerMoves
-
-
