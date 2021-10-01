@@ -1,3 +1,4 @@
+from typing import Set
 import chess
 import sys
 from riskRewardPath import *
@@ -21,7 +22,7 @@ CheckMate = "#"
 Check="+"
 Promotion="="
 Capturing="x"
-
+Castling="0-0"
 
 class BoardValues():
     def __init__(self):
@@ -50,12 +51,12 @@ class BoardSetUp:
     
     def __init__(self,colour):
         self.colour = colour
-        self.PawnPositions = []
-        self.RookPositions = []
-        self.BishopPositions = []
-        self.KnightPositions = []
-        self.QueenPositions = []
-        self.KingPositions = []
+        self.PawnPositions = {}
+        self.RookPositions = {}
+        self.BishopPositions = {}
+        self.KnightPositions = {}
+        self.QueenPositions = {}
+        self.KingPositions = {}
     
     def UpdatePawnPostion(self,MoveType,OldPosition,NewPosition):
         if MoveType==Capture or MoveType==Move:
@@ -67,12 +68,12 @@ class BoardSetUp:
         
     def UpdateRookPostion(self,MoveType,OldPosition,NewPosition):
         if MoveType==Capture or MoveType==Move:
-            self.rookPositions.remove(OldPosition)
-            self.rookPositions.append(NewPosition)
+            self.RookPositions.remove(OldPosition)
+            self.RookPositions.append(NewPosition)
         if MoveType==Captured:
-            self.rookPositions.remove(OldPosition)
+            self.RookPositions.remove(OldPosition)
 
-    def UpdateKnightPosition(self,MoveType,OldPosition,NewPosition):
+    def UpdateKnightPosition(MoveType,OldPosition,NewPosition):
         if MoveType==Capture or MoveType==Move:
             self.KnightPositions.remove(OldPosition)
             self.KnightPositions.append(NewPosition)
@@ -95,7 +96,7 @@ class BoardSetUp:
             self.QueenPositions.remove(OldPosition)
 
 
-    def UpdateKingPostion(self,MoveType,OldPosition,NewPosition):
+    def UpdateKingPostion(MoveType,OldPosition,NewPosition):
         if MoveType==Capture or MoveType==Move:
             self.KingPositions.remove(OldPosition)
             self.KingPositions.append(NewPosition)
@@ -105,20 +106,43 @@ class BoardSetUp:
     def StartPosition(self):
         colour = self.colour
         if colour==White:
-            self.pawnPositions = ["a2","b2","c2","d2","e2","f2","g2","h2"]
-            self.rookPositions = ["a1","h1"]
-            self.KnightPositions=["b1","g1"]
-            self.BishopPositions=["c1","f1"]
-            self.QueenPositions=["d1"]
-            self.KingPositions=["e1"]
+            #self.pawnPositions = ["a2","b2","c2","d2","e2","f2","g2","h2"]
+            self.PawnPositions = {"a2":"a2","b2":"b2","c2":"c2","d2":"d2","e2":"e2","f2":"f2","g2":"g2","h2":"h2"}
+
+            #self.rookPositions = ["a1","h1"]
+            self.RookPositions = {"a1":"a1","h1":"h1"}
+            
+            #self.KnightPositions=["b1","g1"]
+            self.KnightPositions={"b1":"b1","g1":"g1"}
+
+            #self.BishopPositions=["c1","f1"]
+            self.BishopPositions={"c1":"c1","f1":"f1"}
+
+            #self.QueenPositions=["d1"]
+            self.QueenPositions={"d1":"d1"}
+
+            #self.KingPositions=["e1"]
+            self.KingPositions={"e1":"e1"}
 
         else:
-            self.pawnPositions = ["a7","b7","c7","d7","e7","f7","g7","h7"]
-            self.rookPositions = ["a8","h8"]
-            self.KnightPositions = ["b8","g8"]
-            self.KnightPositions = ["c8","f8"]
-            self.QueenPositions = ["d8"]
-            self.KingPositions = ["e8"]
+            #self.pawnPositions = ["a7","b7","c7","d7","e7","f7","g7","h7"]
+            self.pawnPositions = {"a7":"a7","b7":"b7","c7":"c7","d7":"d7","e7":"e7","f7":"f7","g7":"g7","h7":"h7"}
+
+            #self.rookPositions = ["a8","h8"]
+            self.RookPositions = {"a8":"a8","h8":"h8"}
+
+           # self.KnightPositions = ["b8","g8"]
+            self.KnightPositions={"b8":"b8","g8":"g8"}
+
+            #self.KnightPositions = ["c8","f8"]
+            self.BishopPositions={"c8":"c8","f8":"f8"}
+
+            #self.QueenPositions = ["d8"]
+            self.QueenPositions={"d8":"d8"}
+
+            #self.KingPositions = ["e8"]
+            self.KingPositions={"e8":"e8"}
+
 
 class Evaluations:  
     def __init__(self):
@@ -139,78 +163,78 @@ class Evaluations:
 
 
         self.placesDictionary={}        
-        self.placesDictionary["a1"]=0
-        self.placesDictionary["b1"]=1
-        self.placesDictionary["c1"]=2
-        self.placesDictionary["d1"]=3
-        self.placesDictionary["e1"]=4
-        self.placesDictionary["f1"]=5
-        self.placesDictionary["g1"]=6
-        self.placesDictionary["h1"]=7
+        self.placesDictionary[0]="a1"
+        self.placesDictionary[1]="b1"
+        self.placesDictionary[2]="c1"
+        self.placesDictionary[3]="d1"
+        self.placesDictionary[4]="e1"
+        self.placesDictionary[5]="f1"
+        self.placesDictionary[6]="g1"
+        self.placesDictionary[7]="h1"
 
-        self.placesDictionary["a2"]=8
-        self.placesDictionary["b2"]=9
-        self.placesDictionary["c2"]=10
-        self.placesDictionary["d2"]=11
-        self.placesDictionary["e2"]=12
-        self.placesDictionary["f2"]=13
-        self.placesDictionary["g2"]=14
-        self.placesDictionary["h2"]=15
+        self.placesDictionary[8]="a2"
+        self.placesDictionary[9]="b2"
+        self.placesDictionary[10]="c2"
+        self.placesDictionary[11]="d2"
+        self.placesDictionary[12]="e2"
+        self.placesDictionary[13]="f2"
+        self.placesDictionary[14]="g2"
+        self.placesDictionary[15]="h2"
 
-        self.placesDictionary["a3"]=16
-        self.placesDictionary["b3"]=17
-        self.placesDictionary["c3"]=18
-        self.placesDictionary["d3"]=19
-        self.placesDictionary["e3"]=20
-        self.placesDictionary["f3"]=21
-        self.placesDictionary["g3"]=22
-        self.placesDictionary["h3"]=23
+        self.placesDictionary[16]="a3"
+        self.placesDictionary[17]="b3"
+        self.placesDictionary[18]="c3"
+        self.placesDictionary[19]="d3"
+        self.placesDictionary[20]="e3"
+        self.placesDictionary[21]="f3"
+        self.placesDictionary[22]="g3"
+        self.placesDictionary[23]="h3"
 
-        self.placesDictionary["a4"]=24
-        self.placesDictionary["b4"]=25
-        self.placesDictionary["c4"]=26
-        self.placesDictionary["d4"]=27
-        self.placesDictionary["e4"]=28
-        self.placesDictionary["f4"]=29
-        self.placesDictionary["g4"]=30
-        self.placesDictionary["h4"]=31
+        self.placesDictionary[24]="a4"
+        self.placesDictionary[25]="b4"
+        self.placesDictionary[26]="c4"
+        self.placesDictionary[27]="d4"
+        self.placesDictionary[28]="e4"
+        self.placesDictionary[29]="f4"
+        self.placesDictionary[30]="g4"
+        self.placesDictionary[31]="h4"
 
-        self.placesDictionary["a5"]=32
-        self.placesDictionary["b5"]=33
-        self.placesDictionary["c5"]=34
-        self.placesDictionary["d5"]=35
-        self.placesDictionary["e5"]=36
-        self.placesDictionary["f5"]=37
-        self.placesDictionary["g5"]=38
-        self.placesDictionary["h5"]=39
+        self.placesDictionary[32]="a5"
+        self.placesDictionary[33]="b5"
+        self.placesDictionary[34]="c5"
+        self.placesDictionary[35]="d5"
+        self.placesDictionary[36]="e5"
+        self.placesDictionary[37]="f5"
+        self.placesDictionary[38]="g5"
+        self.placesDictionary[39]="h5"
 
-        self.placesDictionary["a6"]=40
-        self.placesDictionary["b6"]=41
-        self.placesDictionary["c6"]=42
-        self.placesDictionary["d6"]=43
-        self.placesDictionary["e6"]=44
-        self.placesDictionary["f6"]=45
-        self.placesDictionary["g6"]=46
-        self.placesDictionary["h6"]=47
+        self.placesDictionary[40]="a6"
+        self.placesDictionary[41]="b6"
+        self.placesDictionary[42]="c6"
+        self.placesDictionary[43]="d6"
+        self.placesDictionary[44]="e6"
+        self.placesDictionary[45]="f6"
+        self.placesDictionary[46]="g6"
+        self.placesDictionary[47]="h6"
 
 
-        self.placesDictionary["a7"]=48
-        self.placesDictionary["b7"]=49
-        self.placesDictionary["c7"]=50
-        self.placesDictionary["d7"]=51
-        self.placesDictionary["e7"]=52
-        self.placesDictionary["f7"]=53
-        self.placesDictionary["g7"]=54
-        self.placesDictionary["h7"]=55
+        self.placesDictionary[48]="a7"
+        self.placesDictionary[49]="b7"
+        self.placesDictionary[50]="c7"
+        self.placesDictionary[51]="d7"
+        self.placesDictionary[52]="e7"
+        self.placesDictionary[53]="f7"
+        self.placesDictionary[54]="g7"
+        self.placesDictionary[55]="h7"
 
-        self.placesDictionary["a8"]=56
-        self.placesDictionary["b8"]=57
-        self.placesDictionary["c8"]=58
-        self.placesDictionary["d8"]=59
-        self.placesDictionary["e8"]=60
-        self.placesDictionary["f8"]=61
-        self.placesDictionary["g8"]=62
-        self.placesDictionary["h8"]=63
+        self.placesDictionary[56]="a8"
+        self.placesDictionary[57]="b8"
+        self.placesDictionary[58]="c8"
+        self.placesDictionary[59]="d8"
+        self.placesDictionary[60]="e8"
+        self.placesDictionary[61]="f8"
+        self.placesDictionary[62]="g8"
+        self.placesDictionary[63]="h8"
 
 class ZobristHashing:
     def __init__(self):
@@ -456,12 +480,12 @@ class BoardUpdatingMethods:
     def EndGame(self,WhitePiece,BlackPiece):
         whiteTotal = 0
         blackTotal = 0
-        whiteTotal+=len(WhitePiece.rookPositions)
+        whiteTotal+=len(WhitePiece.RookPositions)
         whiteTotal+=len(WhitePiece.BishopPositions)
         whiteTotal+=len(WhitePiece.KnightPositions)
         whiteTotal+=len(WhitePiece.QueenPositions)
 
-        blackTotal+=len(BlackPiece.rookPositions)
+        blackTotal+=len(BlackPiece.RookPositions)
         blackTotal+=len(BlackPiece.BishopPositions)
         blackTotal+=len(BlackPiece.KnightPositions)
         blackTotal+=len(BlackPiece.QueenPositions)
@@ -474,6 +498,89 @@ class RiskAnalysis:
     def __init__(self):
         pass
     
+    def SquareUpdating(self,oldSquare,newSquare,whitePieces,blackPieces,colour):
+        if(colour=="White"):            
+                if(oldSquare in whitePieces.PawnPositions):
+                    if(Capture):
+                        whitePieces.UpdatePawnPostion(Capture,oldSquare,newSquare)
+                    elif(Promotion):
+                        whitePieces.UpdatePawnPostion(Promotion,oldSquare,newSquare)
+                    else:
+                        whitePieces.UpdatePawnPosition(Move,oldSquare,newSquare)
+                    
+                if(oldSquare in whitePieces.RookPositions):
+                    if(Capture):
+                        whitePieces.UpdateRookPositions(Capture,oldSquare,newSquare)
+                    else:
+                        whitePieces.UpdateRookPositions(Move,oldSquare,newSquare)
+
+                if(oldSquare in whitePieces.BishopPositions):
+                    if(Capture):
+                        whitePieces.UpdateBishopPositions(Capture,oldSquare,newSquare)
+                    else:
+                        whitePieces.UpdateBishopPositions(Move,oldSquare,newSquare)
+
+                if(oldSquare in whitePieces.KnightPositions):
+                    if(Capture):
+                        whitePieces.UpdateKnightPositions(Capture,oldSquare,newSquare)
+                    else:
+                        whitePieces.UpdateKnightPositions(Move,oldSquare,newSquare)
+
+                if(oldSquare in whitePieces.QueenPositions):
+                    if(Capture):
+                        whitePieces.UpdateQueenPositions(Capture,oldSquare,newSquare)
+                    else:
+                        whitePieces.UpdateQueenPositions(Move,oldSquare,newSquare)
+                
+                if(oldSquare in whitePieces.KingPositions):
+                    if(Capture):
+                        whitePieces.UpdateKingPositions(Capture,oldSquare,newSquare)
+                    elif(Castling):
+                        whitePieces.UpdateKingPositions(Castling,oldSquare,newSquare)
+                    else:
+                        whitePieces.UpdateKingPositions(Move,oldSquare,newSquare)
+
+        elif(colour=="Black"):            
+                if(oldSquare in blackPieces.PawnPositions):
+                    if(Capture):
+                        BoardSetUp.UpdatePawnPostion(Capture,oldSquare,newSquare)
+                    elif(Promotion):
+                        BoardSetUp.UpdatePawnPostion(Promotion,oldSquare,newSquare)
+                    else:
+                        BoardSetUp.UpdatePawnPosition(Move,oldSquare,newSquare)
+                    
+                if(oldSquare in blackPieces.RookPositions):
+                    if(Capture):
+                        BoardSetUp.UpdateRookPositions(Capture,oldSquare,newSquare)
+                    else:
+                        BoardSetUp.UpdateRookPositions(Move,oldSquare,newSquare)
+
+                if(oldSquare in blackPieces.BishopPositions):
+                    if(Capture):
+                        BoardSetUp.UpdateBishopPositions(Capture,oldSquare,newSquare)
+                    else:
+                        BoardSetUp.UpdateBishopPositions(Move,oldSquare,newSquare)
+
+                if(oldSquare in blackPieces.KnightPositions):
+                    if(Capture):
+                        BoardSetUp.UpdateKnightPosition(Capture,oldSquare,newSquare)
+                    else:
+                        BoardSetUp.UpdateKnightPosition(Move,oldSquare,newSquare)
+
+                if(oldSquare in blackPieces.QueenPositions):
+                    if(Capture):
+                        BoardSetUp.UpdateQueenPositions(Capture,oldSquare,newSquare)
+                    else:
+                        BoardSetUp.UpdateQueenPositions(Move,oldSquare,newSquare)
+                
+                if(oldSquare in blackPieces.KingPositions):
+                    if(Capture):
+                        BoardSetUp.UpdateKingPositions(Capture,oldSquare,newSquare)
+                    elif(Castling):
+                        BoardSetUp.UpdateKingPositions(Castling,oldSquare,newSquare)
+                    else:
+                        BoardSetUp.UpdateKingPositions(Move,oldSquare,newSquare)
+
     def PerformTree(self,board,BoardInformation,Setup,Zobrist,whitePieces,blackPieces):
         HighestValue = -math.inf
         LowestValue = math.inf
@@ -485,25 +592,36 @@ class RiskAnalysis:
         bestMove=""
         # SortedClass = Sorting(allComputerMoves)
         # SortedClass.sortedMoveList = SortedClass.sortMoveList(SortedClass.sortedMoveList)
+        
         for move in allComputerMoves:
+            boardLocations=Evaluations()
             futureBoard = board.copy()
             futureBoard.push_san(move)
+            oldSquare=boardLocations.placesDictionary[futureBoard.peek().from_square]
+            newSquare=boardLocations.placesDictionary[futureBoard.peek().to_square]
+            
+            self.SquareUpdating(oldSquare,newSquare,whitePieces,blackPieces,oldColour)
+
+      
+
+
             value, Zobrist, HighestValue, LowestValue = self.alphaBeta(futureBoard,1,BoardInformation,Setup,Zobrist,HighestValue,LowestValue,whitePieces,blackPieces)
             
-        if oldColour==White:
-            print(value)         
-            if value>high:
-              high=value
-              bestMove=move
+            if oldColour==White:
+                # print(value)         
+                if value>high:
+                    high=value
+                    bestMove=move
 
-        elif oldColour==Black:
-            if value<low:
-              low=value
-              bestMove=move
+            elif oldColour==Black:
+                # print(value)
+                if value<low:
+                    low=value
+                    bestMove=move
               
         
         #May need to look into return function
-        return bestMove,Zobrist
+            return bestMove,Zobrist
      
     def alphaBeta(self,board,depth,BoardInformation,Setup,Zobrist,alpha,beta,whitePieces,blackPieces):
         allComputerMoves = BoardInformation.getMoveList(board)
