@@ -332,19 +332,23 @@ class BoardSetUp:
 class Evaluations:  
     def __init__(self):
 
-        self.PawnValueWhite = 0
-        self.RookValueWhite = 0
-        self.KnightValueWhite =0
-        self.BishopValueWhite = 0
-        self.QueenValueWhite = 0
+        self.PawnValueWhite = 124
+        self.RookValueWhite = 1276
+        self.KnightValueWhite = 781
+        self.BishopValueWhite = 825
+        self.QueenValueWhite = 2538
         self.KingValueWhite = 0
 
-        self.PawnValueBlack = 0
-        self.RookValueBlack = 0
-        self.KnightValueBlack = 0
-        self.BishopValueBlack = 0
-        self.QueenValueBlack  =0
+        self.PawnValueBlack = -124
+        self.RookValueBlack = -1276
+        self.KnightValueBlack = -781
+        self.BishopValueBlack = -825
+        self.QueenValueBlack  =-2538
         self.KingValueBlack = 0
+
+
+    
+
 
 
         self.placesDictionary={}        
