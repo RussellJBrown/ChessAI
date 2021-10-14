@@ -828,29 +828,16 @@ class RiskAnalysis:
 
         return whitePieces, blackPieces
 
-    def PerformTree(self,board,BoardInformation,Setup,Zobrist,whitePieces,blackPieces):
-        HighestValue = -math.inf
-        LowestValue = math.inf
-        high=-math.inf
-        low=math.inf
-        allComputerMoves = BoardInformation.getMoveList(board)
-        oldColour = BoardInformation.currentColour
-        BoardInformation.currentColour = BoardInformation.changeColour(BoardInformation.currentColour)        
-        bestMove=""
-        # SortedClass = Sorting(allComputerMoves)
-        # SortedClass.sortedMoveList = SortedClass.sortMoveList(SortedClass.sortedMoveList)
-        bestWhite = copy.deepcopy(whitePieces)
-        bestBlack = copy.deepcopy(blackPieces)
-        moveType=""     
-        boardLocations=Evaluations()
+
+    def SortingMoveList(self,board,allComputerMoves,bestWhite,bestBlack,BoardInformation,upper=False):
+        sortedValueList=[]
+        sortedMoveList=[]
+        print("Sorting Move List:")
         for move in allComputerMoves:
-            oldWhitePieces = copy.deepcopy(whitePieces)
-            oldBlackPieces = copy.deepcopy(blackPieces)
+            bestWhiteCopy = copy.deepcopy(bestWhite)
+            bestBlackCopy = copy.deepcopy(bestBlack)
             futureBoard = board.copy()
             futureBoard.push_san(move)
-            # print("//////////Future Board")
-            # print(futureBoard)
-            # print("/////////End Board")
             oldSquare=boardLocations.placesDictionary[futureBoard.peek().from_square]
             newSquare=boardLocations.placesDictionary[futureBoard.peek().to_square]         
             if Capturing in move:
@@ -862,12 +849,77 @@ class RiskAnalysis:
             elif CastlingShort in move:
                 moveType = CastlingShort
             else:
-                moveType = Move                  
-         
-            tempW,tempB=self.SquareUpdating(moveType,oldSquare,newSquare,oldWhitePieces,oldBlackPieces,oldColour)
-            print(tempW.PawnPositions)
-            print(tempW.KnightPositions)
-            ImposterValue, Zobrist, HighestValue, LowestValue,realValue = self.alphaBeta(futureBoard,1,BoardInformation,Setup,Zobrist,HighestValue,LowestValue,oldWhitePieces,oldBlackPieces)                
+                moveType = Move                           
+            
+            tempW,tempB=self.SquareUpdating(moveType,oldSquare,newSquare,bestWhiteCopy,bestBlackCopy,BoardInformation.currentColour)
+            BoardInformation,Zobrist,alpha,beta,value = self.calculateMoveValue(move,tempW,tempB,BoardInformation)
+            sortedValueList.append(value)
+            sortedMoveList.append(move)
+        
+        if BoardInformation.currentColour==Black and upper==False:
+            sortedValueList,sortedMoveList = (list(t) for t in zip(*sorted(zip(sortedValueList,sortedMoveList))))
+            print(sortedValueList)
+            print(sortedMoveList)
+            del sortedMoveList[12:]
+        elif BoardInformation.currentColour==White and upper==False:
+            sortedValueList,sortedMoveList = (list(t) for t in zip(*sorted(zip(sortedValueList,sortedMoveList),reverse=True)))
+            print(sortedValueList)
+            print(sortedMoveList)
+            del sortedMoveList[12:]
+
+        elif BoardInformation.currentColour==Black and upper==True:
+            sortedValueList,sortedMoveList = (list(t) for t in zip(*sorted(zip(sortedValueList,sortedMoveList))))
+            print(sortedValueList)
+            print(sortedMoveList)
+        elif BoardInformation.currentColour==White and upper==True:
+            sortedValueList,sortedMoveList = (list(t) for t in zip(*sorted(zip(sortedValueList,sortedMoveList),reverse=True)))
+            print(sortedValueList)
+            print(sortedMoveList)
+
+        return sortedMoveList
+
+
+    def PerformTree(self,board,BoardInformation,Setup,Zobrist,whitePieces,blackPieces):
+        HighestValue = -math.inf
+        LowestValue = math.inf
+        high=-math.inf
+        low=math.inf
+        allComputerMoves = BoardInformation.getMoveList(board)
+        oldColour = BoardInformation.currentColour
+              
+        bestMove=""
+        # SortedClass = Sorting(allComputerMoves)
+        # SortedClass.sortedMoveList = SortedClass.sortMoveList(SortedClass.sortedMoveList)
+        bestWhite = copy.deepcopy(whitePieces)
+        bestBlack = copy.deepcopy(blackPieces)
+        moveType=""  
+        boardLocations=Evaluations()
+
+        sortedMoveList = self.SortingMoveList(board,allComputerMoves,bestWhite,bestBlack,BoardInformation,True)
+        print("Black For Now")
+        print(sortedMoveList)
+        BoardInformation.currentColour = BoardInformation.changeColour(BoardInformation.currentColour)  
+        for move in sortedMoveList:
+            #print(move)
+            t0 = time.time() 
+            futureBoard = board.copy()
+            futureBoard.push_san(move)
+  
+            oldSquare=boardLocations.placesDictionary[futureBoard.peek().from_square]
+            newSquare=boardLocations.placesDictionary[futureBoard.peek().to_square]         
+            if Capturing in move:
+                moveType=Capture
+            elif Promotion in move:
+                moveType=Promotion
+            elif CastlingLong in move:
+                moveType = CastlingLong
+            elif CastlingShort in move:
+                moveType = CastlingShort
+            else:
+                moveType = Move                           
+            tempW,tempB=self.SquareUpdating(moveType,oldSquare,newSquare,bestWhite,bestBlack,oldColour)
+            
+            ImposterValue, Zobrist, HighestValue, LowestValue,realValue = self.alphaBeta(futureBoard,1,BoardInformation,Setup,Zobrist,HighestValue,LowestValue,tempW,tempB)                
 
 
             if oldColour==White:        
@@ -879,22 +931,24 @@ class RiskAnalysis:
                     
                 
             elif oldColour==Black:
-                print("Value New:")
+                print(move)
                 print(realValue)
-                print("Old Value")
-                print(low)
-
                 if realValue<low:
-                    print("-----Move Updated: -------------------------")
-                    print(move)
+                    print("Value: ")
                     print(realValue)
-                    
-
+                    print("Move: ")
+                    print(move)
                     low=realValue
                     bestMove=move
                     bestWhite = tempW
                     bestBlack = tempB
-              
+
+            t1 = time.time()
+            print("Timer Tree for Move: ")
+            print(move)
+            print(t1-t0)
+            print("-------------")
+
         print("-----------Best Move: ---------------------------")
         print(bestMove)
         return bestMove,Zobrist, bestWhite, bestBlack
@@ -912,26 +966,22 @@ class RiskAnalysis:
                 Zobrist.ZobHashDict[hashValue]=hashValue
                 BoardInformation.checkInEndGame = BoardInformation.EndGame(whitePieces,blackPieces)
                 if BoardInformation.currentColour == "White":
-                    #print(board)
                     return self.calculateMoveValue(move,whitePieces,blackPieces,BoardInformation,alpha,beta) 
                 else:
-                    #print(board)
                     return self.calculateMoveValue(move,whitePieces,blackPieces,BoardInformation,alpha,beta)
 
         elif BoardInformation.currentColour == White:
             bestVal = float('-inf')
-            try:               
-                for moveInList in allComputerMoves:
-                    # print("---------------------------------")
-                    # print("Depth: " + str(depth))
-                    # print(BoardInformation.currentColour)
-                    # print(allComputerMoves)
-                    # print(moveInList)
-                    # print("Depth: " +str(depth))
-                    # print("White Move:")
-                    # print(moveInList)
-                    oldWhitePieces = copy.deepcopy(whitePieces)
-                    oldBlackPieces = copy.deepcopy(blackPieces)
+            bestMove=""
+            try:   
+                sortedMoveList = self.SortingMoveList(board,allComputerMoves,whitePieces,blackPieces,BoardInformation)            
+                # print("White")
+                # print("Sorted Move List: ")
+                # print(sortedMoveList)
+                for moveInList in sortedMoveList:
+                    #print(moveInList)
+                    bestWhiteCopy = copy.deepcopy(whitePieces)
+                    bestBlackCopy = copy.deepcopy(blackPieces)
                     board.push_san(moveInList)
                     oldSquare=boardLocations.placesDictionary[board.peek().from_square]
                     newSquare=boardLocations.placesDictionary[board.peek().to_square]         
@@ -946,14 +996,15 @@ class RiskAnalysis:
                         print("Short Castle Reached")
                         move = CastlingShort
                     else:
-                        move = Move
-                                                        
-                    oldWhitePieces,oldBlackPieces=self.SquareUpdating(move,oldSquare,newSquare,oldWhitePieces,oldBlackPieces,White)                                    
+                        move = Move                                                    
+                    oldWhitePieces,oldBlackPieces=self.SquareUpdating(move,oldSquare,newSquare,bestWhiteCopy,bestBlackCopy,White)                                    
                     BoardInformation.currentColour = Black
-                    treeValue,Zobrist,alpha, beta,actualValue = self.alphaBeta(board,depth,BoardInformation,Setup,Zobrist,alpha,beta,oldWhitePieces,oldBlackPieces)          
+                    treeValue,Zobrist,alpha, beta,actualValue = self.alphaBeta(board,depth+1,BoardInformation,Setup,Zobrist,alpha,beta,oldWhitePieces,oldBlackPieces)          
                     board.pop()
                     if treeValue!=False:                                      
                         bestVal = max(bestVal,actualValue)
+                        if(bestVal==actualValue):
+                            bestMove = moveInList
                         if bestVal>=beta:
                             break                        
                         alpha = max(alpha,bestVal)
@@ -964,38 +1015,44 @@ class RiskAnalysis:
                 print(e)
                 sys.exit()
 
+
             return BoardInformation, Zobrist, alpha, beta,bestVal
 
         elif BoardInformation.currentColour == Black:
             bestVal = float('inf')
             try:
-                for moveInList in allComputerMoves:
-                    oldWhitePieces = copy.deepcopy(whitePieces)
-                    oldBlackPieces = copy.deepcopy(blackPieces)
+                sortedMoveList = self.SortingMoveList(board,allComputerMoves,whitePieces,blackPieces,BoardInformation)   
+                for moveInList in sortedMoveList:
+                    #print(moveInList)
+                    bestWhiteCopy = copy.deepcopy(whitePieces)
+                    bestBlackCopy = copy.deepcopy(blackPieces)
                     board.push_san(moveInList)
                     oldSquare=boardLocations.placesDictionary[board.peek().from_square]
-                    newSquare=boardLocations.placesDictionary[board.peek().to_square]
-                    if Capturing in moveInList:
+                    newSquare=boardLocations.placesDictionary[board.peek().to_square]         
+                    if Capturing in move:
                         move=Capture
-                    elif Promotion in moveInList:
+                    elif Promotion in move:
                         move=Promotion
-                    elif CastlingLong in moveInList:
-                        move = CastlingLong 
-                    elif CastlingShort in moveInList:
+                    elif CastlingLong in move:
+                        print("Long Castle Reached")
+                        move = CastlingLong
+                    elif CastlingShort in move:
+                        print("Short Castle Reached")
                         move = CastlingShort
-                    else: 
-                        move = Move
-                                                                    
-                    oldWhitePieces,oldBlackPieces=self.SquareUpdating(move,oldSquare,newSquare,oldWhitePieces,oldBlackPieces,Black)
+                    else:
+                        move = Move                                                    
+                    oldWhitePieces,oldBlackPieces=self.SquareUpdating(move,oldSquare,newSquare,bestWhiteCopy,bestBlackCopy,White)                                    
                     BoardInformation.currentColour = White
-                    treeValue,Zobrist,alpha,beta,actualValue = self.alphaBeta(board,depth+1,BoardInformation,Setup,Zobrist,alpha,beta,oldWhitePieces,oldBlackPieces)
+                    treeValue,Zobrist,alpha, beta,actualValue = self.alphaBeta(board,depth+1,BoardInformation,Setup,Zobrist,alpha,beta,oldWhitePieces,oldBlackPieces)          
                     board.pop()
                     if treeValue!=False:                       
                         bestVal = min(bestVal,actualValue) 
-                        if bestVal<alpha:
-                            
-                            break
+                        if(bestVal==actualValue):
+                            bestMove=moveInList                                
+                        if bestVal<=alpha:                         
+                            break                        
                         beta = min(beta,bestVal)
+
             except Exception as e:
                 print("Error in AlphaBeta White Move Black")
                 print(e)
@@ -1003,7 +1060,7 @@ class RiskAnalysis:
 
             return BoardInformation, Zobrist, alpha, beta,bestVal
 
-    def calculateMoveValue(self,move,WhitePieces,BlackPieces,BoardInformation,alpha,beta):
+    def calculateMoveValue(self,move,WhitePieces,BlackPieces,BoardInformation,alpha=0,beta=0):
         whiteValue=0
         blackValue=0
         if "#" in move and BoardInformation.currentColour==White:
@@ -1018,10 +1075,10 @@ class RiskAnalysis:
         elif "O-O-O" in move and BoardInformation.currentColour == Black:
              blackValue+=50
 
-        elif "0-0" in move and BoardInformation.currentColour == White:
+        elif "O-O" in move and BoardInformation.currentColour == White:
              whiteValue+=50
 
-        elif "0-0" in move and BoardInformation.currentColour == Black:
+        elif "O-O" in move and BoardInformation.currentColour == Black:
              blackValue+=50
 
         elif "=" in move and BoardInformation.currentColour == White:
@@ -1047,10 +1104,10 @@ class RiskAnalysis:
         valueWhite=0
         valueBlack=0        
         for i in WhitePieces.PawnPositions:
-            valueWhite+=self.getValuePosition(White,1,BoardInformation.checkInEndGame,i,Locations)   
-            # print("Pawn")
-            # print(i)
-            # print(valueWhite)    
+            valueWhite+=self.getValuePosition(White,1,BoardInformation.checkInEndGame,i,Locations)
+            # print("Pawn Positions")
+            # print(i)   
+    
         for i in WhitePieces.RookPositions:
             valueWhite+=self.getValuePosition(White,4,BoardInformation.checkInEndGame,i,Locations)
             # print("Rook")
@@ -1074,36 +1131,18 @@ class RiskAnalysis:
 
         for i in BlackPieces.PawnPositions:
             valueBlack+=self.getValuePosition(Black,1,BoardInformation.checkInEndGame,i,Locations)
+        
         for i in BlackPieces.RookPositions:
             valueBlack+=self.getValuePosition(Black,4,BoardInformation.checkInEndGame,i,Locations)
+        
         for i in BlackPieces.BishopPositions:
-            valueBlack+=self.getValuePosition(Black,3,BoardInformation.checkInEndGame,i,Locations)
+            valueBlack+=self.getValuePosition(Black,3,BoardInformation.checkInEndGame,i,Locations)           
         for i in BlackPieces.KnightPositions:
             valueBlack+=self.getValuePosition(Black,2,BoardInformation.checkInEndGame,i,Locations)
         for i in BlackPieces.QueenPositions:
             valueBlack+=self.getValuePosition(Black,5,BoardInformation.checkInEndGame,i,Locations)
         for i in BlackPieces.KingPositions:
             valueBlack+=self.getValuePosition(Black,6,BoardInformation.checkInEndGame,i,Locations)
-
-        #print("Value Black")
-        # print(valueBlack)
-        # print(len(BlackPieces.PawnPositions))
-        # print(len(BlackPieces.KnightPositions))
-        # print(len(BlackPieces.BishopPositions))
-        # print(len(BlackPieces.RookPositions))
-        # print(len(BlackPieces.QueenPositions))
-        # print(len(BlackPieces.KingPositions))
-
-        # print("Value White")
-        # print(valueWhite)
-        # print(len(WhitePieces.PawnPositions))
-        # print(len(WhitePieces.KnightPositions))
-        # print(len(WhitePieces.BishopPositions))
-        # print(len(WhitePieces.RookPositions))
-        # print(len(WhitePieces.QueenPositions))
-        # print(len(WhitePieces.KingPositions))
-
-
 
         return valueWhite,valueBlack
 
@@ -1180,8 +1219,6 @@ class RiskAnalysis:
             elif PieceType==6:
                 value = Locations.blackKingMid[Location]
 
-
-
         elif Colour==Black and LateGame==True:
             if PieceType==1:
                 value = Locations.blackPawnMid[Location]
@@ -1196,7 +1233,6 @@ class RiskAnalysis:
             elif PieceType == 6:
                 value = Locations.blackKingEnd[Location]
 
- 
         return value
 
 class Sorting:
